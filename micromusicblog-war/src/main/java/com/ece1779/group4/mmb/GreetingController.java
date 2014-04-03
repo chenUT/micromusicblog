@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.ece1779.group4.mmb.model.Greeting;
 import com.googlecode.objectify.Key;
 
 @Controller   

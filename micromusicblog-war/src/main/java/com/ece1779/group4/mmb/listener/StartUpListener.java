@@ -3,7 +3,7 @@ package com.ece1779.group4.mmb.listener;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import com.ece1779.group4.mmb.Greeting;
+import com.ece1779.group4.mmb.model.Greeting;
 import com.googlecode.objectify.ObjectifyService;
 
 public class StartUpListener implements ServletContextListener{

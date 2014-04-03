@@ -1,4 +1,4 @@
-package com.ece1779.group4.mmb;
+package com.ece1779.group4.mmb.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
