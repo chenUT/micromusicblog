@@ -10,11 +10,6 @@
 	   <load-on-startup>1</load-on-startup>
 	</servlet>
 
-   <!-- Listener for initilization -->
-   <listener>
-       <listener-class>com.ece1779.group4.mmb.listener.StartUpListener</listener-class>
-   </listener>
-   
    <!-- Servlet for web content -->
    <servlet>
       <servlet-name>webcontent</servlet-name>
