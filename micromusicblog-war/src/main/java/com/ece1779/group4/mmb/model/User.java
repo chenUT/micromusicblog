@@ -21,7 +21,7 @@ public class User {
 	String name;
 	
 	@JsonProperty
-	List<Key<User>> flollowings;
+	List<Key<User>> followings;
 	
 	@JsonProperty
 	List<Key<Post>> posts;
@@ -45,12 +45,12 @@ public class User {
 	}
 
 	@JsonProperty("followings")
-	public List<Key<User>> getFlollowings() {
-		return flollowings;
+	public List<Key<User>> getFollowings() {
+		return followings;
 	}
 
-	public void setFlollowings(List<Key<User>> flollowings) {
-		this.flollowings = flollowings;
+	public void setFollowings(List<Key<User>> followings) {
+		this.followings = followings;
 	}
 
 	@JsonProperty("posts")
