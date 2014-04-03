@@ -32,6 +32,12 @@
 	</repositories>
     
     <dependencies>
+        <!-- Objectify-appengine -->
+        <dependency>
+      		<groupId>com.googlecode.objectify</groupId>
+      		<artifactId>objectify</artifactId>
+      		<version>4.1.1</version>
+    	</dependency>
         <!-- Jackson library -->
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
