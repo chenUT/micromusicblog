@@ -12,6 +12,9 @@
         http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
         
     <mvc:annotation-driven />
+
 	<bean id ="GreetingBean" class="com.ece1779.group4.mmb.GreetingController"/>
+	<bean id ="UserProfileBean" class="com.ece1779.group4.mmb.controller.rest.UserInfoDataController"/>
+	
 
 </beans>

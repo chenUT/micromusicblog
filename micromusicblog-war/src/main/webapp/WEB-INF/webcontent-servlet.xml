@@ -13,10 +13,13 @@
 
     <mvc:annotation-driven />
 	<bean id ="HelloBean" class="com.ece1779.group4.mmb.HelloController"/>
+    <bean id ="LoginBean" class="com.ece1779.group4.mmb.controller.mvc.LoginController"/> 
+    <bean id ="ProfileBean" class="com.ece1779.group4.mmb.controller.mvc.ProfileController"/>
+    <bean id ="RegisterBean" class="com.ece1779.group4.mmb.controller.mvc.RegisterController"/>
     
-   <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-      <property name="prefix" value="/WEB-INF/jsp/" />
-      <property name="suffix" value=".jsp" />
-   </bean>
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+       <property name="prefix" value="/WEB-INF/jsp/" />
+       <property name="suffix" value=".jsp" />
+    </bean>
 	
 </beans>

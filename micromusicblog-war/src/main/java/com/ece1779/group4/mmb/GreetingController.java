@@ -1,6 +1,6 @@
 package com.ece1779.group4.mmb;
 
-import static com.googlecode.objectify.ObjectifyService.ofy;
+import static com.ece1779.group4.mmb.dao.OfyService.ofy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.ece1779.group4.mmb.model.Greeting;
 import com.googlecode.objectify.Key;
+import com.googlecode.objectify.ObjectifyService;
 
 @Controller   
 @RequestMapping("/greeting")
@@ -26,7 +27,9 @@ public class GreetingController {
 
     private static final String template = "Hello, %s!";
     //private final AtomicLong counter = new AtomicLong();
-    
+//    static{
+//		ObjectifyService.register(Greeting.class);
+//	}
     
     @RequestMapping(method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
