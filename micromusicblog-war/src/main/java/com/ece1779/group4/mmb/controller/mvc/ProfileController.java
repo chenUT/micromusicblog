@@ -4,6 +4,7 @@ import static com.ece1779.group4.mmb.dao.OfyService.ofy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -21,6 +22,7 @@ import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
+import com.googlecode.objectify.Key;
 
 @Controller
 @RequestMapping("/profile")
@@ -31,8 +33,10 @@ public class ProfileController {
 		
 		 UserService userService = UserServiceFactory.getUserService(); 
 		 String accountName = userService.getCurrentUser().getEmail();
-	     UserInfo user = ofy().load().type(UserInfo.class).id(accountName).now();	
+		 System.out.println("account name: "+accountName);
+	     UserInfo user = ofy().load().type(UserInfo.class).id(accountName).now();
          if(user == null){
+	     System.out.println("userinfo null");
         	 ModelAndView regModel = new ModelAndView("register");
        	 	return regModel;
          }
@@ -45,11 +49,16 @@ public class ProfileController {
 		 model.addAttribute("message", "Hello "+user.getProfileName());
 		 model.addAttribute("logouturl",userService.createLogoutURL("/login"));
 		 
-		 
-		 
 		 ModelAndView profModel = new ModelAndView("profile");
-		 List<String> t = getList();
-		 profModel.addObject("lists",t);
+		 if(user.getFollowings().size() !=0){
+			 Map<Key<UserInfo>,UserInfo> followingMap =ofy().load().keys(user.getFollowings());
+			 if(followingMap != null){
+				 List<UserInfo> infos = new ArrayList<UserInfo>(followingMap.values());
+				 profModel.addObject("lists",infos);
+			 }
+		 }
+		 
+//		 List<String> t = getList();
 		 //profModel.addObject(attributeName, attributeValue)
          
 		 //check whether user is a registered user

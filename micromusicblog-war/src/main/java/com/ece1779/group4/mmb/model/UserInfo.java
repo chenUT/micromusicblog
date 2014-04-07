@@ -1,5 +1,7 @@
 package com.ece1779.group4.mmb.model;
 
+import java.beans.Transient;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -19,14 +21,15 @@ public class UserInfo {
 	@JsonProperty
 	String accountName;
 	
+	@Index
 	@JsonProperty
 	String profileName;
 	
 	@JsonProperty
-	List<Key<UserInfo>> followings;
+	List<Key<UserInfo>> followings = new ArrayList<Key<UserInfo>>();
 	
 	@JsonProperty
-	List<Key<Post>> posts;
+	List<Key<Post>> posts = new ArrayList<Key<Post>>();
 
 	@JsonProperty
 	int followerCount;
@@ -50,11 +53,11 @@ public class UserInfo {
 	}
 
 	@JsonProperty("followings")
-	public List<Key<UserInfo>> getFlollowings() {
+	public List<Key<UserInfo>> getFollowings() {
 		return followings;
 	}
 
-	public void setFlollowings(List<Key<UserInfo>> flollowings) {
+	public void setFollowings(List<Key<UserInfo>> flollowings) {
 		this.followings = flollowings;
 	}
 
@@ -77,6 +80,23 @@ public class UserInfo {
 	}
 	
 	public void incrementFollowerCount(){
+		this.followerCount += 1;
+	}
+	
+	public void addFollowing(Key<UserInfo> following){
+		this.followings.add(following);
+	}
+	
+	public void removeFollowing(Key<UserInfo> following){
+		this.followings.remove(following);
+	}
+	
+	@Transient
+	public Key<UserInfo> getKey() {
+	   return Key.create(UserInfo.class, accountName);
+	}
+
+	public void decrementFollowerCount() {
 		this.followerCount += 1;
 	}
 }

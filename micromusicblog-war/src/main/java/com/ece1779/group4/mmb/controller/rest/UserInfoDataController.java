@@ -4,6 +4,7 @@ package com.ece1779.group4.mmb.controller.rest;
 import static com.ece1779.group4.mmb.dao.OfyService.ofy;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.springframework.http.HttpStatus;
@@ -15,11 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.ece1779.group4.mmb.model.Post;
+import com.ece1779.group4.mmb.model.UserDetail;
 import com.ece1779.group4.mmb.model.UserInfo;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
-import com.googlecode.objectify.Key;
+import com.googlecode.objectify.cmd.Query;
 
 @Controller
 @RequestMapping("/userData")
@@ -27,7 +28,7 @@ public class UserInfoDataController {
 	
     private static Logger logger = Logger.getLogger(UserInfo.class.getName());
 
-	@RequestMapping(value="/{accountName}",method=RequestMethod.GET)
+	@RequestMapping(value="/id/{accountName}",method=RequestMethod.GET)
 	@ResponseBody
 	public ResponseEntity<UserInfo> getUser(@PathVariable String accountName){
 		
@@ -61,6 +62,46 @@ public class UserInfoDataController {
 		return new ResponseEntity<UserInfo>(info, HttpStatus.OK);
 	}
 	
+	@RequestMapping(value="/name/{profileName}",method=RequestMethod.GET)
+	@ResponseBody
+	public ResponseEntity<List<UserInfo>> getUserByName(@PathVariable String profileName){
+		UserService userService = UserServiceFactory.getUserService();
+
+		List<UserInfo> users = new ArrayList<UserInfo>();
+		Query<UserInfo> usersQ = ofy().load().type(UserInfo.class);
+		usersQ = usersQ.filter("profileName ==", profileName);
+		users = usersQ.list();
+		//users = ofy().load().type(UserInfo.class).list();
+		
+//		if(users == null){
+//			return new ResponseEntity<List<UserInfo>>(HttpStatus.NOT_FOUND);
+//		}
+//
+//		QueryResultIterator<UserInfo> iterator = usersQ.iterator();
+//		while(iterator.hasNext()){
+//			UserInfo un = iterator.next();
+//			users.add(un);
+//		}
+		 
+		UserInfo myAccount=null;
+		for(UserInfo u : users){
+			if(u.getAccountName().equals(userService.getCurrentUser().getEmail())){
+				myAccount = u;
+				break;
+			}
+		}
+		if(myAccount != null){
+			users.remove(myAccount);
+		}
+//		if(user == null){
+//			user = new UserInfo();
+//			user.setProfileName(profileName+" "+c);
+//		}
+//		users.clear();
+//		users.add(myAccount);
+		return new ResponseEntity<List<UserInfo>>(users, HttpStatus.OK);
+	}
+	
 	//User info here only have a simple user profile name and its account Name
 	 @RequestMapping(method = RequestMethod.POST,
 	    		headers = {"Content-type=application/json"})
@@ -72,8 +113,6 @@ public class UserInfoDataController {
 		 	
 		 	
 		 	userInfo.setFollowerCount(0);
-		 	userInfo.setPosts(new ArrayList<Key<Post>>());
-		 	userInfo.setFlollowings(new ArrayList<Key<UserInfo>>());
 		 	
 		 	if(ofy().load().type(UserInfo.class).filter("accountName", userInfo.getAccountName()).count() != 0){
 		 		return new ResponseEntity<UserInfo>(HttpStatus.CONFLICT);
@@ -89,6 +128,70 @@ public class UserInfoDataController {
 		 	
 		 	return new ResponseEntity<UserInfo>(userInfo,HttpStatus.CREATED);
 	}
+	 
+		//User info here only have a simple user profile name and its account Name
+	 @RequestMapping(value="/follow",method = RequestMethod.PUT,
+			 headers = {"Content-type=application/json"})
+	 public ResponseEntity<UserInfo> followUser(@RequestBody UserDetail targetUser){
+		    String accountName = targetUser.getAccountName();
+		 	//this depends on google account service
+		 	UserService userService = UserServiceFactory.getUserService();
+		 	String myAccount = userService.getCurrentUser().getEmail();
+		 	UserInfo target = ofy().load().type(UserInfo.class).id(accountName).now();
+		 	UserInfo myInfo = ofy().load().type(UserInfo.class).id(myAccount).now();
+		 	
+		 	if(target == null){
+		 		return new ResponseEntity<UserInfo>(HttpStatus.BAD_REQUEST);
+		 	}
+		 	
+		 	target.incrementFollowerCount();
+
+		 	ofy().save().entity(target);
+		 	myInfo.addFollowing(target.getKey());
+		 	ofy().save().entity(myInfo);
+		 	
+		 	//put userinfo in memcache
+//		 	MemcacheService syncCache;
+//		 	try{
+//		 		syncCache = MemcacheServiceFactory.getMemcacheService();
+//		 		syncCache.put(user, arg1);
+//		 	}
+		 	
+		 	return new ResponseEntity<UserInfo>(HttpStatus.NO_CONTENT);
+	}
+	 
+	 @RequestMapping(value="/unfollow",method = RequestMethod.PUT,
+			 headers = {"Content-type=application/json"})
+	 public ResponseEntity<UserInfo> unfollowUser(@RequestBody UserDetail targetUser){
+		    String accountName = targetUser.getAccountName();
+		 	//this depends on google account service
+		 	UserService userService = UserServiceFactory.getUserService();
+		 	String myAccount = userService.getCurrentUser().getEmail();
+		 	UserInfo target = ofy().load().type(UserInfo.class).id(accountName).now();
+		 	UserInfo myInfo = ofy().load().type(UserInfo.class).id(myAccount).now();
+		 	
+		 	if(target == null){
+		 		return new ResponseEntity<UserInfo>(HttpStatus.BAD_REQUEST);
+		 	}
+		 	
+		 	target.decrementFollowerCount();
+
+		 	ofy().save().entity(target);
+		 	myInfo.removeFollowing(target.getKey());
+		 	ofy().save().entity(myInfo);
+		 	
+		 	//put userinfo in memcache
+//		 	MemcacheService syncCache;
+//		 	try{
+//		 		syncCache = MemcacheServiceFactory.getMemcacheService();
+//		 		syncCache.put(user, arg1);
+//		 	}
+		 	
+		 	return new ResponseEntity<UserInfo>(HttpStatus.NO_CONTENT);
+	}
+	 
+	 
+	 
 	 
 	 @RequestMapping(value="/{accountName}", method = RequestMethod.PUT,
 			 headers = {"Content-type=application/json"})
