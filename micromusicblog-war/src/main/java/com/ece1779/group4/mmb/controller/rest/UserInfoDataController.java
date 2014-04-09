@@ -20,6 +20,7 @@ import com.ece1779.group4.mmb.model.UserDetail;
 import com.ece1779.group4.mmb.model.UserInfo;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.cmd.Query;
 
 @Controller
@@ -103,22 +104,30 @@ public class UserInfoDataController {
 	}
 	
 	//User info here only have a simple user profile name and its account Name
-	 @RequestMapping(method = RequestMethod.POST,
+	 @RequestMapping(value="/profile/{profileName}",method = RequestMethod.POST,
 	    		headers = {"Content-type=application/json"})
-	 public ResponseEntity<UserInfo> createUser(@RequestBody UserInfo userInfo){
+	 public ResponseEntity<UserInfo> createUserProfile(@PathVariable String profileName){
 		 	
 		 	//this depends on google account service
 		 	UserService userService = UserServiceFactory.getUserService();
-		 	userInfo.setAccountName(userService.getCurrentUser().getEmail());
 		 	
+		 	UserInfo existUser = ofy().load().type(UserInfo.class).filter("accountName ==",userService.getCurrentUser().getEmail()).first().now();
 		 	
-		 	userInfo.setFollowerCount(0);
-		 	
-		 	if(ofy().load().type(UserInfo.class).filter("accountName", userInfo.getAccountName()).count() != 0){
-		 		return new ResponseEntity<UserInfo>(HttpStatus.CONFLICT);
+		 	if(existUser !=null){
+		 		existUser.setProfileName(profileName);
+		 		ofy().save().entity(existUser);
+		 		return new ResponseEntity<UserInfo>(existUser,HttpStatus.CREATED);
 		 	}
-		 	ofy().save().entity(userInfo);
-		 	
+		 	else{
+		 		UserInfo userInfo = new UserInfo();
+		 		userInfo.setProfileName(profileName);
+		 		userInfo.setAccountName(userService.getCurrentUser().getEmail());
+		 		userInfo.setFollowerCount(0);
+		 		userInfo.setKey(Key.create(UserInfo.class,userService.getCurrentUser().getEmail()));
+		 		ofy().save().entity(userInfo);
+		 		
+		 	}
+		 	return new ResponseEntity<UserInfo>(HttpStatus.CREATED);
 		 	//put userinfo in memcache
 //		 	MemcacheService syncCache;
 //		 	try{
@@ -126,7 +135,7 @@ public class UserInfoDataController {
 //		 		syncCache.put(user, arg1);
 //		 	}
 		 	
-		 	return new ResponseEntity<UserInfo>(userInfo,HttpStatus.CREATED);
+		 	
 	}
 	 
 		//User info here only have a simple user profile name and its account Name
@@ -137,15 +146,17 @@ public class UserInfoDataController {
 		 	//this depends on google account service
 		 	UserService userService = UserServiceFactory.getUserService();
 		 	String myAccount = userService.getCurrentUser().getEmail();
-		 	UserInfo target = ofy().load().type(UserInfo.class).id(accountName).now();
-		 	UserInfo myInfo = ofy().load().type(UserInfo.class).id(myAccount).now();
+		 	UserInfo target = ofy().load().type(UserInfo.class).filter("accountName ==",accountName).first().now();
+		 	
+		 	UserInfo myInfo = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
+		 	
 		 	
 		 	if(target == null){
 		 		return new ResponseEntity<UserInfo>(HttpStatus.BAD_REQUEST);
 		 	}
 		 	
 		 	target.incrementFollowerCount();
-
+		 	target.addFollower(myInfo.getKey());
 		 	ofy().save().entity(target);
 		 	myInfo.addFollowing(target.getKey());
 		 	ofy().save().entity(myInfo);
@@ -167,15 +178,17 @@ public class UserInfoDataController {
 		 	//this depends on google account service
 		 	UserService userService = UserServiceFactory.getUserService();
 		 	String myAccount = userService.getCurrentUser().getEmail();
-		 	UserInfo target = ofy().load().type(UserInfo.class).id(accountName).now();
-		 	UserInfo myInfo = ofy().load().type(UserInfo.class).id(myAccount).now();
+		 	UserInfo target = ofy().load().type(UserInfo.class).filter("accountName ==",accountName).first().now();
+		 	
+		 	UserInfo myInfo = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
+		 	
 		 	
 		 	if(target == null){
 		 		return new ResponseEntity<UserInfo>(HttpStatus.BAD_REQUEST);
 		 	}
 		 	
 		 	target.decrementFollowerCount();
-
+		 	target.removeFollower(myInfo.getKey());
 		 	ofy().save().entity(target);
 		 	myInfo.removeFollowing(target.getKey());
 		 	ofy().save().entity(myInfo);

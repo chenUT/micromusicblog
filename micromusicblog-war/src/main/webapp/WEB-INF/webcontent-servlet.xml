@@ -3,6 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:mvc="http://www.springframework.org/schema/mvc"  
+	xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="
         http://www.springframework.org/schema/beans 
         http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
@@ -10,15 +11,19 @@
         http://www.springframework.org/schema/context/spring-context-3.0.xsd
         http://www.springframework.org/schema/mvc
         http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
-
+    
     <mvc:annotation-driven />
+    
+    <mvc:resources mapping="/lib/**" location="/WEB-INF/lib/"/>
+    <mvc:resources mapping="/css/**" location="/WEB-INF/css/"/>
+    
 	<bean id ="HelloBean" class="com.ece1779.group4.mmb.HelloController"/>
     <bean id ="LoginBean" class="com.ece1779.group4.mmb.controller.mvc.LoginController"/> 
     <bean id ="ProfileBean" class="com.ece1779.group4.mmb.controller.mvc.ProfileController"/>
     <bean id ="RegisterBean" class="com.ece1779.group4.mmb.controller.mvc.RegisterController"/>
     <bean id ="SearchUserBean" class="com.ece1779.group4.mmb.controller.mvc.SearchUserController"/>
     
-    
+  
     
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
        <property name="prefix" value="/WEB-INF/jsp/" />

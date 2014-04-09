@@ -2,12 +2,14 @@ package com.ece1779.group4.mmb.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @Entity
+@Cache
 public class Post {
 	@Id
 	String id; //Id is in the format of userAccount_timestamp so it would be unique and easier for query to compare
@@ -19,7 +21,10 @@ public class Post {
 //	byte[] backgroundImg;
 	
 	@JsonProperty
-	byte[] voiceData;
+	Key<Post> key;
+	
+	@JsonProperty
+	byte[] data;
 	
 	@JsonProperty
 	int hit;
@@ -30,6 +35,18 @@ public class Post {
 	@JsonProperty
 	String userAccount;
 	
+	@JsonProperty
+	String format;
+	
+	@JsonProperty("format")
+	public String getFormat() {
+		return format;
+	}
+
+	public void setFormat(String format) {
+		this.format = format;
+	}
+
 	@JsonProperty("hit")
 	public int getHit() {
 		return hit;
@@ -75,13 +92,13 @@ public class Post {
 //		this.backgroundImg = backgroundImg;
 //	}
 
-	@JsonProperty("voiceData")
+	@JsonProperty("data")
 	public byte[] getData() {
-		return voiceData;
+		return data;
 	}
 
 	public void setData(byte[] voiceData) {
-		this.voiceData = voiceData;
+		this.data = voiceData;
 	}
 	
 	@JsonProperty("userAccount")
@@ -91,5 +108,16 @@ public class Post {
 	
 	public void setUserAccount(String userAccount){
 		this.userAccount = userAccount;
+	}
+	
+	public void setKey(Key<Post> key){
+		this.key = key;
+	}
+	
+	public Key<Post> getKey(){
+		if(key == null){
+			key=Key.create(Post.class, id);
+		}
+		return key;
 	}
 }

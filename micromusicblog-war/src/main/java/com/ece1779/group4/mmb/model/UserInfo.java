@@ -13,11 +13,38 @@ import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
-@Cache
 @Entity
+@Cache
 public class UserInfo {
 
 	@Id
+	Long id;
+	
+	@JsonProperty("id")
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	@JsonProperty
+	Key<UserInfo> key;
+	
+	@JsonProperty("myKey")
+	public Key<UserInfo> getKey() {
+		if(key==null){
+			setKey(Key.create(UserInfo.class,accountName));
+		}
+		return key;
+	}
+
+	public void setKey(Key<UserInfo> myKey) {
+		this.key = myKey;
+	}
+
+	@Index
 	@JsonProperty
 	String accountName;
 	
@@ -31,6 +58,9 @@ public class UserInfo {
 	@JsonProperty
 	List<Key<Post>> posts = new ArrayList<Key<Post>>();
 
+	@JsonProperty
+	List<Key<UserInfo>> followers = new ArrayList<Key<UserInfo>>();
+	
 	@JsonProperty
 	int followerCount;
 
@@ -90,11 +120,42 @@ public class UserInfo {
 	public void removeFollowing(Key<UserInfo> following){
 		this.followings.remove(following);
 	}
-	
-	@Transient
-	public Key<UserInfo> getKey() {
-	   return Key.create(UserInfo.class, accountName);
+
+	@JsonProperty("followers")
+	public List<Key<UserInfo>> getFollowers() {
+		return followers;
 	}
+
+	public void setFollowers(List<Key<UserInfo>> followers) {
+		this.followers = followers;
+	}
+	
+	public void addFollower(Key<UserInfo> follower){
+		this.followers.add(follower);
+	}
+	
+	public void removeFollower(Key<UserInfo> follower){
+		this.followers.remove(follower);
+	}
+
+	public void addPost(Key<Post> p){
+		this.posts.add(p);
+	}
+	
+	public void removePost(Key<Post> p ){
+		this.posts.remove(p);
+	}
+	
+	
+//	@Transient
+//	public Key<UserInfo> getKey() {
+//		if(myKey==null){
+//            return Key.create(UserInfo.class, accountName);
+//		}
+//		else{
+//			
+//		}
+//	}
 
 	public void decrementFollowerCount() {
 		this.followerCount += 1;

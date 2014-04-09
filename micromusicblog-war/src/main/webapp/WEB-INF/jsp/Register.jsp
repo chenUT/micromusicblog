@@ -27,20 +27,17 @@
    			$("#nameForm").submit(function(e){
    				e.preventDefault();
    				var userName = $("#name").val();
-   				var userObj = {
-   						"profileName":userName
-   				}
    				$.ajax({
    		    		type:"POST",
-   		    		url:"/api/userData",
+   		    		url:"/api/userData/profile/"+userName,
    		    		contentType: "application/json; charset=utf-8",
    		    		dataType:"json",
-   		    		data:JSON.stringify(userObj),
    		    		success:function(data){
    		    			window.location.href = "/profile";
    		    		},
    		    		error:function(jqXHR,textStatus,errorThrown){
-   		    			alert("error");
+   		    			//alert("error "+jqXHR+" "+textStatus+" "+errorThrown);
+   		    			window.location.href = "/profile";
    		    		}
    		    	});
    			});

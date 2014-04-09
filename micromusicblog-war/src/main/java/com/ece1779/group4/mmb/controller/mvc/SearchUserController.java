@@ -38,7 +38,8 @@ public class SearchUserController {
 		usersQ = usersQ.filter("profileName ==", profileName);
 		users = usersQ.list();
 
-		UserInfo myInfo = ofy().load().type(UserInfo.class).id(myAccountId).now();
+		UserInfo myInfo = ofy().load().type(UserInfo.class).filter("accountName ==",myAccountId).first().now();
+	     
 		//users = ofy().load().type(UserInfo.class).list();
 		
 //		if(users == null){
