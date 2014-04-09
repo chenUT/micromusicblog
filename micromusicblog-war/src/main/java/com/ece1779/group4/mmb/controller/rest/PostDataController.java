@@ -118,6 +118,7 @@ public class PostDataController {
 			          post.setId(""+System.currentTimeMillis());
 			          post.setData(b.getBytes());
 			          post.setCreatedTime(System.currentTimeMillis());
+			          post.setKey(Key.create(Post.class,post.getId()));
 			          Key<Post>postKey = post.getKey();
 			          ofy().save().entity(post);
 			          
