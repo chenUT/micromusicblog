@@ -10,10 +10,22 @@
 <body>
 
 	<div>
-		<a href="/profile">Go back</a>
+		<a href="/profile">Back</a>
 	</div>
-   
-    <c:if test="${not empty lists}">
+	<div class="listview small">
+		<c:forEach var="user" items="${lists}">
+		<a href="#" class="list">
+			<div class="list-content">
+				${user.profileName}
+				<div>
+					<input class="followAccount" name="account" type="hidden" value="${user.accountName}">
+					<button class="followUser">${user.isFollowing ? "unfollow" : "follow"}</button>
+				</div>
+			</div> <!-- list content -->
+		</a>
+		</c:forEach>
+	</div>
+<!--    <c:if test="${not empty lists}">
 		<ul style="list-style-type:none">
 			<c:forEach var="user" items="${lists}">
 				<li >${user.profileName}</li>
@@ -24,9 +36,9 @@
 			</c:forEach>
 		</ul>
  
-	</c:if>
+	</c:if> -->
 	
- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+ <script src="//code.jquery.com/jquery-2.1.0.min.js"></script>
  <script type="text/javascript">
  	$(document).ready(function(){
  		$(".followUser").on('click',function(e){

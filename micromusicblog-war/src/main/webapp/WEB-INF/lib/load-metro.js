@@ -3,6 +3,5 @@ $(function(){
         $("<script/>").attr('src', 'lib/metro/metro-loader.js').appendTo($('head'));
     } else {
         $("<script/>").attr('src', 'lib/metro.min.js').appendTo($('head'));
-        $("<script/>").attr('src', 'lib/RecordRTC.js').appendTo($('head'));
     }
 });
