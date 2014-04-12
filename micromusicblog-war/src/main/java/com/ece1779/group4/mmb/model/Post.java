@@ -1,7 +1,10 @@
 package com.ece1779.group4.mmb.model;
 
+import java.beans.Transient;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.appengine.api.datastore.Blob;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
@@ -24,7 +27,7 @@ public class Post {
 	Key<Post> key;
 	
 	@JsonProperty
-	byte[] data;
+	Blob data;
 	
 	@JsonProperty
 	int hit;
@@ -33,7 +36,7 @@ public class Post {
 	long createdTime;
 	
 	@JsonProperty
-	String userAccount;
+	Key<UserInfo> ownerKey;
 	
 	@JsonProperty
 	String format;
@@ -94,30 +97,30 @@ public class Post {
 
 	@JsonProperty("data")
 	public byte[] getData() {
-		return data;
+		if(data!=null){
+           return data.getBytes();
+		}
+		else{
+			return null;
+		}
 	}
 
 	public void setData(byte[] voiceData) {
-		this.data = voiceData;
+		this.data=null;// free memory
+		this.data = new Blob(voiceData);
 	}
 	
-	@JsonProperty("userAccount")
-	public String getUserAccount(){
-		return this.userAccount;
+	@JsonProperty("ownerKey")
+	public Key<UserInfo> getOwnerKey(){
+		return this.ownerKey;
 	}
 	
-	public void setUserAccount(String userAccount){
-		this.userAccount = userAccount;
+	public void setOwnerKey(Key<UserInfo> ownerKey){
+		this.ownerKey = ownerKey;
 	}
 	
-	public void setKey(Key<Post> key){
-		this.key = key;
-	}
-	
+	@Transient
 	public Key<Post> getKey(){
-		if(key == null){
-			key=Key.create(Post.class, id);
-		}
-		return key;
+		return Key.create(Post.class, id);
 	}
 }

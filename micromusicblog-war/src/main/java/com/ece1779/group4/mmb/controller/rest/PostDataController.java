@@ -92,93 +92,92 @@ public class PostDataController {
 			        InputStream stream = item.openStream();
 
 			        if (item.isFormField()) {
-			          System.out.println("Got a form field: " + item.getFieldName()+" field value: "+item.getName());
+			          System.out.println("Got a form field: " + item.getFieldName()+" field value: "+item.toString());
 			        } else {
 			        	 System.out.println("Got an uploaded file: " + item.getFieldName() +
 			                      ", name = " + item.getName());
+			        	 
+			        	 //we store the audio format as the blob field name
+			        	 String audioFormat = item.getFieldName();
 
-			          // You now have the filename (item.getName() and the
-			          // contents (which you can read from stream). Here we just
-			          // print them back out to the servlet output stream, but you
-			          // will probably want to do something more interesting (for
-			          // example, wrap them in a Blob and commit them to the
-			          // datastore).
-			          int len;
-			          byte[] buffer = new byte[8192];
+			        	 //read the blob file from filestream
+			        	 int len;
+			        	 byte[] buffer = new byte[8192];
+			        	 ByteArrayOutputStream theFile = new ByteArrayOutputStream();
 
-			          ByteArrayOutputStream theFile = new ByteArrayOutputStream();
-			          
-			          while ((len = stream.read(buffer, 0, buffer.length)) != -1) {
-			        	theFile.write(buffer, 0, len);  
-			          }
-			          Blob b =new Blob(theFile.toByteArray());
-			          theFile.close();
-			          System.out.println("blob size: "+b.getBytes().length);
-			          Post post = new Post();
-			          post.setId(""+System.currentTimeMillis());
-			          post.setData(b.getBytes());
-			          post.setCreatedTime(System.currentTimeMillis());
-			          post.setKey(Key.create(Post.class,post.getId()));
-			          Key<Post>postKey = post.getKey();
-			          ofy().save().entity(post);
-			          
-			          //find current user and add it to its post list
-			        //this depends on google account service
-					  UserService userService = UserServiceFactory.getUserService();
-			          UserInfo poster =  ofy().load().type(UserInfo.class).filter("accountName ==",userService.getCurrentUser().getEmail()).first().now();
-//					  add post to poster
-			          poster.addPost(postKey);
-			          System.out.println("post added for "+poster.getAccountName());
-			          ofy().save().entity(poster);
-			          
-			          PostInfo newInfo = new PostInfo();
-//			          newInfo.
-			          newInfo.setCreater(poster.getProfileName()); 
-			          newInfo.setPostKey(postKey.getString());
-			          newInfo.setCreateTime(post.getCreatedTime());
-			          
-			          //notify all followers
-			  		ChannelService channelService = ChannelServiceFactory.getChannelService();
-			  		List<Key<UserInfo>> followers = poster.getFollowers();
-			  		String channelKey="";
-			  		
-			  		//create new post to json
-			  		ObjectWriter mapper = new ObjectMapper().writer();
-					String json="{}";
-					try {
-						json = mapper.writeValueAsString(newInfo);
-						for(int i=0;i<followers.size();i++){
-				  			channelKey = followers.get(i).getString();
-				  			channelService.sendMessage(new ChannelMessage(channelKey,json));
-				  		}
-					} catch (JsonProcessingException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-//			          d.setData(b.getBytes());
-			          return new ResponseEntity<PostInfo>(newInfo, HttpStatus.OK);
+			        	 while ((len = stream.read(buffer, 0, buffer.length)) != -1) {
+			        		 theFile.write(buffer, 0, len);  
+			        	 }
+			        	 //store data in entity
+			        	 Post post = new Post();
+			        	 post.setData(theFile.toByteArray());
+			        	 theFile.close();
+			        	 System.out.println("blob size: "+post.getData().length);
+//			        	 Blob b =new Blob(theFile.toByteArray());
+			        	 //blob retrieved
+			        	 //get current user infomation
+                         UserService userService = UserServiceFactory.getUserService();
+			        	 String userAccount = userService.getCurrentUser().getEmail();
+                         
+			        	 long createdTime = System.currentTimeMillis();
+			        	 
+			        	 post.setId(userAccount+"_"+createdTime); //we use current time stamp as the post id
+			        	 post.setCreatedTime(createdTime);
+			        	 
+			        	 //store post in datastore
+			        	 
+			        	 
+			        	 
+			        	 //find current user and add it to its post list
+			        	 //this depends on google account service
+			        	 UserInfo poster =  ofy().load().type(UserInfo.class).filter("accountName ==",userAccount).first().now();
+			        	 //					  add post to poster
+			        	 post.setOwnerKey(poster.getKey());
+			        	 poster.addPost(post.getKey());
+                         System.out.println("post added to poster");
+                         System.out.println("post added for "+poster.getAccountName());
+                         System.out.println("post added with id "+post.getKey().getString());
+			        	 
+			        	 ofy().save().entity(poster).now();
+			        	 ofy().save().entity(post).now();
+			        	 
+			        	 //create return postInfo to client
+			        	 PostInfo newPostInfo = new PostInfo();
+			        	 newPostInfo.setCreater(poster.getProfileName()); 
+			        	 newPostInfo.setPostKey(post.getKey().getString());
+			        	 newPostInfo.setCreateTime(post.getCreatedTime());
+			        	 newPostInfo.setOwnerKey(poster.getKey().getString());
+
+			        	 //notify all followers
+                         System.out.println("creating channel to followers");
+			        	 ChannelService channelService = ChannelServiceFactory.getChannelService();
+			        	 List<Key<UserInfo>> followers = poster.getFollowers();
+			        	 System.out.println("total followers count: "+followers.size());
+			        	 String channelKey="";
+			        	 //create new post to json
+			        	 ObjectWriter mapper = new ObjectMapper().writer();
+			        	 String json="{}";
+			        	 try {
+			        		 json = mapper.writeValueAsString(newPostInfo);
+			        		 for(int i=0;i<followers.size();i++){
+			        			 System.out.println("sending notification");
+			        			 channelKey = followers.get(i).getString();
+			        			 channelService.sendMessage(new ChannelMessage(channelKey,json));
+			        		 }
+			        	 } catch (JsonProcessingException e) {
+			        		 // TODO Auto-generated catch block
+			        		 e.printStackTrace();
+			        	 }
+			        	 return new ResponseEntity<PostInfo>(newPostInfo, HttpStatus.OK);
 			        }
 			      }
 			    } catch (Exception ex) {
 			    	System.out.println(ex.getMessage());
-			      throw new ServletException(ex);
+			        throw new ServletException(ex);
 			    }
 			 
 			 return null;
 			 	
-//			 	if(ofy().load().type(Post.class).filter("id", post.getId()).count() != 0){
-//			 		return new ResponseEntity<Post>(HttpStatus.CONFLICT);
-//			 	}
-//			 	ofy().save().entity(post);
-//		
-//			 	//put Post in memcache
-////			 	MemcacheService syncCache;
-////			 	try{
-////			 		syncCache = MemcacheServiceFactory.getMemcacheService();
-////			 		syncCache.put(user, arg1);
-////			 	}
-//			 	
-//			 	return new ResponseEntity<Post>(post,HttpStatus.CREATED);
 		}
 		 
 		 @RequestMapping(value="/{postId}", method = RequestMethod.PUT,

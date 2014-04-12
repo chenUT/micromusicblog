@@ -26,6 +26,18 @@ public class PostInfo {
 	}
 
 	@JsonProperty
+	String ownerKey;
+	
+	@JsonProperty("ownerKey")
+	public String getOwnerKey(){
+		return this.ownerKey;
+	}
+	
+	public void setOwnerKey(String ownerKey){
+		this.ownerKey = ownerKey;
+	}
+	
+	@JsonProperty
 	String postKey;
 	
 	@JsonProperty

@@ -3,10 +3,11 @@ package com.ece1779.group4.mmb.controller.mvc;
 import static com.ece1779.group4.mmb.dao.OfyService.ofy;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -17,7 +18,6 @@ import org.springframework.web.servlet.ModelAndView;
 import com.ece1779.group4.mmb.model.Greeting;
 import com.ece1779.group4.mmb.model.Post;
 import com.ece1779.group4.mmb.model.PostInfo;
-import com.ece1779.group4.mmb.model.SimplePostObj;
 import com.ece1779.group4.mmb.model.UserInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +28,6 @@ import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.googlecode.objectify.Key;
-import com.googlecode.objectify.NotFoundException;
 
 @Controller
 @RequestMapping("/profile")
@@ -64,12 +63,19 @@ public class ProfileController {
 		 
 		 
 		 Map<Key<Post>,Post> myPostMap =ofy().load().keys(user.getPosts());
-		 List<Post> postsFromMe = new ArrayList<Post>(myPostMap.values());
-		 System.out.println("postsFromMe: "+postsFromMe.size());
-		 for(int i=0; i<postsFromMe.size();i++){
-			 Post currPost = postsFromMe.get(i);
+//		 List<Post> postsFromMe = new ArrayList<Post>(myPostMap.values());
+		 Set<Key<Post>>keys = myPostMap.keySet();
+		 Iterator<Key<Post>> iter = keys.iterator();
+		 System.out.println("postsFromMe: "+myPostMap.size());
+//		 for(int i=0; i<postsFromMe.size();i++){
+		 Key<Post> tempKey=null;
+		 Post currPost;
+		 while(iter.hasNext())
+			 tempKey = iter.next(); 
+		 	 currPost = myPostMap.get(tempKey);
+//			 Post currPost = postsFromMe.get(i);
 			 tempPostInfo = new PostInfo();
-			 if(currPost.getComment() == null){
+			 if(currPost !=null && currPost.getComment() == null){
 				 tempPostInfo.setComment("No Comment");
 			 }
 			 else{
@@ -79,7 +85,7 @@ public class ProfileController {
 			 tempPostInfo.setPostKey(currPost.getKey().getString());
 			 tempPostInfo.setCreateTime(currPost.getCreatedTime());
 			 postInfoList.add(tempPostInfo);
-		 }
+//		 }
 		 ModelAndView profModel = new ModelAndView("profile");
 
 		 
@@ -91,7 +97,10 @@ public class ProfileController {
 		
 		 System.out.println("i am following: "+user.getFollowings().size());
 		 if(user.getFollowings().size() !=0){
-			 UserInfo t = ofy().load().key(user.getFollowings().get(0)).now();
+			 String keyString = user.getFollowings().get(0).getString();
+			 System.out.println("i am following: "+keyString);
+			 Key<UserInfo> tk =Key.create(keyString);
+			 UserInfo t = ofy().load().key(tk).now();
 			if(t != null){
 				 System.out.println("i am following: "+t.getProfileName());
 			}
@@ -101,8 +110,9 @@ public class ProfileController {
 			 
 			 Map<Key<UserInfo>,UserInfo> followingMap =ofy().load().keys(user.getFollowings());
 			 if(followingMap != null){
-				 List<UserInfo> infos = new ArrayList<UserInfo>(followingMap.values());
-				 System.out.println("i am following: "+infos.size());
+                 Set<Key<UserInfo>> followingUserInfoKeys = followingMap.keySet();
+				 //List<UserInfo> infos = new ArrayList<UserInfo>(followingMap.values());
+				 System.out.println("i am following: "+followingMap.size());
 				 //Here we are going through all post from the users we are following
 				 //we only get 20 for demo purpose
 				 //TODO find the latest 200 post and return 20 of them
@@ -111,13 +121,26 @@ public class ProfileController {
 //				 long earliesPostTime=Long.MAX_VALUE; //timestamp for earliest post
 //				 Post earliestPost;
 //				 int earliestPostIndex=0;
-				 for(UserInfo info : infos){
-					 Map<Key<Post>,Post> postMap =ofy().load().keys(info.getPosts());
+				 Iterator<Key<UserInfo>> infoKeyIter = followingUserInfoKeys.iterator();
+//				 for(UserInfo info : infos){
+				 UserInfo info;
+				 Key<UserInfo> currKey;
+				 while(infoKeyIter.hasNext()){
+					 currKey = infoKeyIter.next();
+					 info = followingMap.get(currKey);
+					 List<Post> postsForUser = new ArrayList<Post>();
+					 for(Key<Post> pk : info.getPosts()){
+						 System.out.println("following post with key "+pk.getString());
+						 Post p = ofy().load().key(pk).now();
+						 if(p!=null){
+							 postsForUser.add(p);
+						 }
+					 }
 					 
-					 System.out.println("postMap size: "+postMap.size());
-					 List<Post> postsForUser = new ArrayList<Post>(postMap.values());
+					 //sync load					
+					
 					 for(int i=0; i<postsForUser.size();i++){
-						 Post currPost = postsForUser.get(i);
+						 currPost = postsForUser.get(i);
 						 tempPostInfo = new PostInfo();
 						 if(currPost.getComment() == null){
 							 tempPostInfo.setComment("No Comment");

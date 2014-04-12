@@ -9,10 +9,10 @@
 
     <link href="css/metro-bootstrap.css" rel="stylesheet">
     <link href="css/metro-bootstrap-responsive.css" rel="stylesheet">
-    <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
 
 <!-- Load JavaScript Libraries at the end for performance reason-->
-<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+<script src="//code.jquery.com/jquery-2.1.0.min.js"></script>
 <script src="lib/jquery/jquery.ui.widget.min.js"></script>
 <script src="lib/jquery/jquery.mousewheel.js"></script>
 
@@ -21,6 +21,7 @@
  
  
 <style>
+
 html,
 body {
   height: 100%;
@@ -70,7 +71,7 @@ body {
             </item>
             <span class="element-divider place-right"></span>
             <item class="element place-right">
-               <form id="searchUserForm" style="top:-10px;">
+               <form id="searchUserForm" style="top:-5px;">
 					<input type="text" id="searchUserName" placeholder="Search User Name">
 					<input type="submit" value="Search">     			
    			   </form>
@@ -264,11 +265,9 @@ body {
     	                };
 
     	var isFirefox = !!navigator.mozGetUserMedia;
-	    var g = {"id":"1"
-	    		,"content":"my content"};
 	   // alert(JSON.stringify(g));
 	    
-	    $("#getData").on('click',function(e){
+	/*     $("#getData").on('click',function(e){
 	    	e.preventDefault();
 	    	$.ajax({
 	    		type:"POST",
@@ -280,11 +279,11 @@ body {
 	    //			alert(JSON.stringify(data));
 	    		}
 	    	});
-	    });
+	    }); */
 
 		 $("#startRecord").on('click',function(){
 			 $("#stopRecord").removeClass("inverse");
-	            $("#startRecord").addClass("inverse");
+	         $("#startRecord").addClass("inverse");
 			 if (!audioStream){
 			       navigator.getUserMedia(audioConstraints, function(stream) {
 			           if (window.IsChrome) {
@@ -310,13 +309,10 @@ body {
 							              //document.getElementById('audio-url-preview').innerHTML = '<a href="' + url + '" target="_blank">Recorded Audio URL</a>';
 							         	if (isFirefox){
 							         		resultBlob = recorder.getBlob();
-							         	
-							         		
-							         		}
+							         	}
 							         	
 							    });
 						          recording =false;
-						          
 						          if (!isFirefox){
 						          	var blob = recorder.getBlob();
 						          	alert("no ff");
@@ -399,7 +395,8 @@ body {
 				 //if(isFireFox)
 						
 				 fd.append("format","ogg");
-				 fd.append('recordData',resultBlob);
+				 var audioFormat = resultBlob.type;
+				 fd.append(audioFormat,resultBlob);
 				 //alert(resultBlob.size);
 				 $.ajax({
 					    type: 'POST',
@@ -503,7 +500,7 @@ body {
 	}
 	
 	function onMessage(data){
-		alert(data['data']);
+		alert("onMessage! "+JSON.stringify(data));
 	}
 	
 	function onError(){

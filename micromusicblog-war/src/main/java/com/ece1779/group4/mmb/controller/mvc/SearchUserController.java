@@ -30,7 +30,7 @@ public class SearchUserController {
 		UserService userService = UserServiceFactory.getUserService();
 		String myAccountId = userService.getCurrentUser().getEmail();
 		
-		ModelAndView searchResultMAV = new ModelAndView("SearchUser");
+		ModelAndView searchResultMAV = new ModelAndView("searchuser");
 		
 
 		List<UserInfo> users = new ArrayList<UserInfo>();
@@ -53,15 +53,15 @@ public class SearchUserController {
 //		}
 		 
 		 Map<Key<UserInfo>,UserInfo> followingMap=null;
-		 if(myInfo.getFollowings().size() !=0){
-			 followingMap =ofy().load().keys(myInfo.getFollowings());
+		 if(myInfo.getFollowings()!=null){
+			 if(myInfo.getFollowings().size() !=0){
+				 followingMap =ofy().load().keys(myInfo.getFollowings());
+			 }
 		 }
 		
-		UserInfo myAccount=null;
 		List<UserDetail> details = new ArrayList<UserDetail>();
 		UserDetail resultUser;
 		for(UserInfo u : users){
-			
 			if(!u.getAccountName().equals(myAccountId)){
 				resultUser = new UserDetail();
 				resultUser.setAccountName(u.getAccountName());

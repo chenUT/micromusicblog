@@ -28,7 +28,7 @@ public class RegisterController {
 		
 	    UserService userService = UserServiceFactory.getUserService();
 	    String userAccountName = userService.getCurrentUser().getEmail();
-	    UserInfo user = ofy().load().type(UserInfo.class).id(userAccountName).now();
+	    UserInfo user = ofy().load().type(UserInfo.class).filter("accountName ==",userAccountName).first().now();
 	    if(user != null){
 	    	resp.sendRedirect("/profile");
 	    	return null;

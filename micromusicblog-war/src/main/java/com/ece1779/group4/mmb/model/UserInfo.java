@@ -18,17 +18,14 @@ import com.googlecode.objectify.annotation.Index;
 public class UserInfo {
 
 	@Id
-	Long id;
+	@Index
+	String accountName;
 	
 	@JsonProperty("id")
-	public Long getId() {
-		return id;
+	public String getId(){
+		return this.accountName;
 	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
+	
 	@JsonProperty
 	Key<UserInfo> key;
 	
@@ -43,10 +40,6 @@ public class UserInfo {
 	public void setKey(Key<UserInfo> myKey) {
 		this.key = myKey;
 	}
-
-	@Index
-	@JsonProperty
-	String accountName;
 	
 	@Index
 	@JsonProperty

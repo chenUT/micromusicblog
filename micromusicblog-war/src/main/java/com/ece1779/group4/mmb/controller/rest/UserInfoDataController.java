@@ -147,20 +147,26 @@ public class UserInfoDataController {
 		 	UserService userService = UserServiceFactory.getUserService();
 		 	String myAccount = userService.getCurrentUser().getEmail();
 		 	UserInfo target = ofy().load().type(UserInfo.class).filter("accountName ==",accountName).first().now();
-		 	
 		 	UserInfo myInfo = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
-		 	
 		 	
 		 	if(target == null){
 		 		return new ResponseEntity<UserInfo>(HttpStatus.BAD_REQUEST);
 		 	}
 		 	
 		 	target.incrementFollowerCount();
+		 	System.out.println(accountName+"adding follower with key "+myInfo.getKey().getString()+" from "+myAccount);
 		 	target.addFollower(myInfo.getKey());
-		 	ofy().save().entity(target);
-		 	myInfo.addFollowing(target.getKey());
-		 	ofy().save().entity(myInfo);
+		 	ofy().save().entity(target).now();
 		 	
+		 	System.out.println("adding following with key "+target.getKey().getString());
+		 	Key<UserInfo> anotherKey = Key.create(UserInfo.class,target.getAccountName());
+		 	
+		 	myInfo.addFollowing(anotherKey);
+		 	System.out.println("i am following :"+myInfo.getFollowings().size()+" people now");
+		 	ofy().save().entity(myInfo).now();
+		 	
+		 	UserInfo myInfoText = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
+			System.out.println("i am following :"+myInfoText.getFollowings().size()+" people now (retrive data from datastore)");
 		 	//put userinfo in memcache
 //		 	MemcacheService syncCache;
 //		 	try{

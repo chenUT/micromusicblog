@@ -14,7 +14,7 @@
     </parent>
 
     <properties>
-        <appengine.app.version>1-war</appengine.app.version>
+        <appengine.app.version>2-war</appengine.app.version>
         <appengine.target.version>1.9.2</appengine.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>

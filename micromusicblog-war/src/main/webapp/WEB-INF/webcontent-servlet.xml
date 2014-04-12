@@ -22,7 +22,7 @@
     <bean id ="ProfileBean" class="com.ece1779.group4.mmb.controller.mvc.ProfileController"/>
     <bean id ="RegisterBean" class="com.ece1779.group4.mmb.controller.mvc.RegisterController"/>
     <bean id ="SearchUserBean" class="com.ece1779.group4.mmb.controller.mvc.SearchUserController"/>
-    
+    <bean id ="IndexBean" class="com.ece1779.group4.mmb.controller.mvc.IndexController"/>
   
     
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
