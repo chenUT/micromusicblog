@@ -86,9 +86,10 @@ pageEncoding="US-ASCII"%>
 					</div> <!-- quadro-vertical -->
 					<div id="postContainer">
 						<c:forEach var="postInfo" items="${postInfos}">
-						<div class="tile voiceTile ol-transparent" onclick="clickToPlay('${postInfo.postKey}')">
+						<div class="tile voiceTile ol-transparent" >
 							${postInfo.creater} <br/>
-							${postInfo.comment}
+							${postInfo.hits}<br/>
+							<i class="fa fa-play" onclick="clickToPlay('${postInfo.postKey}')"></i>
 						</div> <!-- tile -->
 					</c:forEach>
 				</div> <!-- postContainer -->
@@ -113,29 +114,52 @@ pageEncoding="US-ASCII"%>
 <script type="text/javascript" src="lib/RecordRTC.min.js"></script>
 
 <script type="text/javascript">
+	var tout; 		// Timeout variable (for recording)
+	var interval;
+
+	function startProgress() {
+		var pb = $('#pb').progressbar();
+		var progress = 0;
+		interval = setInterval(function() {
+			pb.progressbar('value', Math.floor((++progress)/2));
+			if (progress >= 100) window.clearInterval(interval);
+		}, 100);
+		console.log('starting progress '+interval);
+	};
+
+	function stopProgress() {
+		console.log('stopping progress '+interval);
+		window.clearInterval(interval);
+	};
+
+	function clearProgress() {
+		var pb = $('#pb').progressbar();
+		progress = 0;
+		pb.progressbar('value', 0);
+		console.log('clearing progress ');
+	};
+
 	var clickToPlay = function(postKey){
 		var safeString = encodeURI(postKey);
- 		//alert(safeString);
- 		 //var isFirefox = !!navigator.mozGetUserMedia;
- 		 $.ajax({
- 		 	type:"GET",
- 		 	url:"/api/postData/"+safeString,
- 		 	success:function(result){
- 		 		var byteCharacters = atob(result.data);
+		$.ajax({
+			type:"GET",
+			url:"/api/postData/"+safeString,
+			success:function(result){
+				var byteCharacters = atob(result.data);
 
- 		 		var byteNumbers = new Array(byteCharacters.length);
- 		 		for (var i = 0; i < byteCharacters.length; i++) {
- 		 			byteNumbers[i] = byteCharacters.charCodeAt(i);
- 		 		}
- 		 		var byteArray = new Uint8Array(byteNumbers);
- 		 		var audioType;
- 		 		if(true){
- 		 			audioType='audio/ogg';
- 		 		}
- 		 		else{
- 		 			audioType = 'audio/wav'
- 		 		}
- 		 		var receiveBlob = new Blob([byteArray],{type:audioType});
+				var byteNumbers = new Array(byteCharacters.length);
+				for (var i = 0; i < byteCharacters.length; i++) {
+					byteNumbers[i] = byteCharacters.charCodeAt(i);
+				}
+				var byteArray = new Uint8Array(byteNumbers);
+				var audioType;
+				if(true){
+					audioType='audio/ogg';
+				}
+				else{
+					audioType = 'audio/wav';
+				}
+				var receiveBlob = new Blob([byteArray],{type:audioType});
 
  		       //alert(receiveBlob.size);
 
@@ -181,8 +205,6 @@ pageEncoding="US-ASCII"%>
     	var resultBlob = null;
     	socket.onopen = onOpened;
     	socket.onmessage = onMessage;
-    	socket.onerror = onError;
-    	socket.onclose = onClose;
     	function hasGetUserMedia() {
     		return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
     			navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -232,27 +254,8 @@ pageEncoding="US-ASCII"%>
 	    	});
 }); */
 
-function startProgress() {
-	var pb = $('#pb').progressbar();
-	var progress = 0;
-	var interval = setInterval(function() {
-		pb.progressbar('value', Math.floor((++progress)/2));
-		if (progress == 100) stopProgress(interval);
-	}, 100);
-
-	return interval;
-}
-
-function stopProgress(i) {
-	window.clearInterval(i);
-}
-
-function clearProgress() {
-	var pb = $('#pb').progressbar();
-	pb.progressbar('value', 0);
-}
-
 $("#startRecord").on('click',function(){
+	clearProgress();
 	$("#startRecord").addClass("inverse");
 	$("#stopRecord").removeClass("inverse");
 	var duration_in_seconds = 20; //we record 20sec of audio max
@@ -268,16 +271,15 @@ $("#startRecord").on('click',function(){
 			});
 
 			// start recording
-			clearProgress();
 			recorder.startRecording();
-			var interval = startProgress();
+			startProgress();
 			$("#stopRecord").prop('disabled', false);
 			recording = true;
-			setTimeout(function() {
+			tout = setTimeout(function() {
 				if(recording){
 					if (recorder){
 						// alert("record stopped");
-						stopProgress(interval);
+						stopProgress();
 						$("#startRecord").prop('disabled', false);
 						$("#stopRecord").prop('disabled', true);
 						$("#postRecord").prop('disabled', false);
@@ -306,37 +308,40 @@ $("#startRecord").on('click',function(){
 }
 else {
 	if (recorder){
+		clearProgress();
 		recorder.startRecording();
+		startProgress();
 		recording=true;
 		$("#stopRecord").prop('disabled', false);;
 	}
-	setTimeout(function() { 
-
+	tout = setTimeout(function() { 
 		if (recorder){
-				// alert("record stopped");
-				$("#startRecord").prop('disabled', false);
-				$("#stopRecord").prop('disabled', true);
-				$("#startRecord").removeClass("inverse");
-				$("#stopRecord").addClass("inverse");
-				recorder.stopRecording(function(url) {
-					if (isFirefox){
-						resultBlob = recorder.getBlob();
-					}
-				});
-				recording =false;
-
-				if (!isFirefox){
-					var blob = recorder.getBlob();
-					resultBlob = blob;
+			stopProgress();
+			// alert("record stopped");
+			$("#startRecord").prop('disabled', false);
+			$("#stopRecord").prop('disabled', true);
+			$("#startRecord").removeClass("inverse");
+			$("#stopRecord").addClass("inverse");
+			recorder.stopRecording(function(url) {
+				if (isFirefox){
+					resultBlob = recorder.getBlob();
 				}
+			});
+			recording =false;
+
+			if (!isFirefox){
+				var blob = recorder.getBlob();
+				resultBlob = blob;
 			}
-			    }, 5000);//we record 20sec of audio max
+		}
+		    }, duration_in_seconds*1000);//we record 20sec of audio max
 }
 window.isAudio = true;
 $("#startRecord").prop('disabled', true);
 }); 
 
 $("#stopRecord").on('click',function(){
+	window.clearTimeout(tout);
 	$("#startRecord").removeClass("inverse");
 	$("#stopRecord").addClass("inverse");
 	$("#startRecord").prop('disabled', false);
@@ -364,6 +369,7 @@ $("#stopRecord").on('click',function(){
 		  });
 
 $("#postRecord").on('click',function(){
+	clearProgress();
 	$("#postRecord").addClass("inverse");
 	$("#postRecord").prop('disabled', true);
 	if(resultBlob){
@@ -397,7 +403,7 @@ $("#postRecord").on('click',function(){
 			                //create a new div
 			                ctp = "clickToPlay('" + result.postKey + "');";
 			                newPostDiv = "<div class='voiceTile tile ol-transparent " + tileClasses[num] +
-			                "' onclick=\"" + ctp + "\">" + result.creater + "<br/>" + com + "</div> <!-- tile -->";
+			                "'>" + result.creater + "<br/>" + result.hits + "<br/><i class='fa fa-play' onclick=\"" + ctp + "\"></i></div> <!-- tile -->";
 
 			                /*
 			                newPostDiv="<div class='voiceTile tile ol-transparent "+tileClasses[num]

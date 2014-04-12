@@ -16,7 +16,7 @@ pageEncoding="US-ASCII"%>
 
   <title>MMB: Recording and remixing for the rest of us!</title>
 </head>
-<body>
+<body class="metro">
 	<div class="container">
     <div class="grid fluid">
       <div class="row">
