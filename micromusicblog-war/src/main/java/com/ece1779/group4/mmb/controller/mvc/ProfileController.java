@@ -75,16 +75,18 @@ public class ProfileController {
 		 	 currPost = myPostMap.get(tempKey);
 //			 Post currPost = postsFromMe.get(i);
 			 tempPostInfo = new PostInfo();
-			 if(currPost !=null && currPost.getComment() == null){
-				 tempPostInfo.setComment("No Comment");
+			 if(currPost !=null){
+				 if(currPost.getComment() == null){
+					 tempPostInfo.setComment("No Comment");
+				 }
+				 else{
+					 tempPostInfo.setComment(currPost.getComment());
+				 }
+				 tempPostInfo.setCreater(user.getProfileName());
+				 tempPostInfo.setPostKey(currPost.getKey().getString());
+				 tempPostInfo.setCreateTime(currPost.getCreatedTime());
+				 postInfoList.add(tempPostInfo);
 			 }
-			 else{
-				 tempPostInfo.setComment(currPost.getComment());
-			 }
-			 tempPostInfo.setCreater(user.getProfileName());
-			 tempPostInfo.setPostKey(currPost.getKey().getString());
-			 tempPostInfo.setCreateTime(currPost.getCreatedTime());
-			 postInfoList.add(tempPostInfo);
 //		 }
 		 ModelAndView profModel = new ModelAndView("profile");
 
@@ -142,16 +144,18 @@ public class ProfileController {
 					 for(int i=0; i<postsForUser.size();i++){
 						 currPost = postsForUser.get(i);
 						 tempPostInfo = new PostInfo();
-						 if(currPost.getComment() == null){
-							 tempPostInfo.setComment("No Comment");
+						 if(currPost !=null){
+							 if(currPost.getComment() == null){
+								 tempPostInfo.setComment("No Comment");
+							 }
+							 else{
+								 tempPostInfo.setComment(currPost.getComment());
+							 }
+							 tempPostInfo.setCreater(info.getProfileName());
+							 tempPostInfo.setPostKey(currPost.getKey().getString());
+							 tempPostInfo.setCreateTime(currPost.getCreatedTime());
+							 postInfoList.add(tempPostInfo);
 						 }
-						 else{
-							 tempPostInfo.setComment(currPost.getComment());
-						 }
-						 tempPostInfo.setCreater(info.getProfileName());
-						 tempPostInfo.setPostKey(currPost.getKey().getString());
-						 tempPostInfo.setCreateTime(currPost.getCreatedTime());
-						 postInfoList.add(tempPostInfo);
 						 //compare each post with earlies post time
 //						 if(currPost.getCreatedTime()<earliesPostTime){
 //							 earliestPost = postsForUser.get(i);
