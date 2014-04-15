@@ -88,14 +88,14 @@ pageEncoding="US-ASCII"%>
 						<c:forEach var="postInfo" items="${postInfos}">
 						<div class="tile voiceTile ol-transparent" >
 							${postInfo.creater} <br/>
-							${postInfo.hits}<br/>
-							<i class="fa fa-play" onclick="clickToPlay('${postInfo.postKey}')"></i>
-						</div> <!-- tile -->
-					</c:forEach>
-				</div> <!-- postContainer -->
-			</div> <!-- tile group -->
-		</div> <!-- tile area -->
-	</div> <!-- main content -->
+							${postInfo.comment}<br/>
+							<button class="button" onclick="clickToPlay('${postInfo.postKey}')"></i>
+							</div> <!-- tile -->
+						</c:forEach>
+					</div> <!-- postContainer -->
+				</div> <!-- tile group -->
+			</div> <!-- tile area -->
+		</div> <!-- main content -->
 
 <%--  <div>
     <c:if test="${not empty lists}">
@@ -231,7 +231,7 @@ pageEncoding="US-ASCII"%>
 
     	 var audioStream;
     	 var recorder;
-    	 var recording=false;
+    	 var recording = false;
     	 var audioConstraints = {
     	 	audio: true,
     	 	video: false
@@ -311,30 +311,31 @@ else {
 		clearProgress();
 		recorder.startRecording();
 		startProgress();
-		recording=true;
+		recording = true;
 		$("#stopRecord").prop('disabled', false);;
 	}
 	tout = setTimeout(function() { 
 		if (recorder){
 			stopProgress();
-			// alert("record stopped");
 			$("#startRecord").prop('disabled', false);
 			$("#stopRecord").prop('disabled', true);
+			$("#postRecord").prop('disabled', false);
 			$("#startRecord").removeClass("inverse");
 			$("#stopRecord").addClass("inverse");
+			$("#postRecord").removeClass("inverse");
 			recorder.stopRecording(function(url) {
 				if (isFirefox){
 					resultBlob = recorder.getBlob();
 				}
 			});
-			recording =false;
+			recording = false;
 
 			if (!isFirefox){
 				var blob = recorder.getBlob();
 				resultBlob = blob;
 			}
 		}
-		    }, duration_in_seconds*1000);//we record 20sec of audio max
+		    }, duration_in_seconds*1000);
 }
 window.isAudio = true;
 $("#startRecord").prop('disabled', true);
@@ -348,7 +349,6 @@ $("#stopRecord").on('click',function(){
 	$("#stopRecord").prop('disabled', true);
 	$("#postRecord").prop('disabled', false);
 	$("#postRecord").removeClass("inverse");
-	// alert("record stopped");
 	if (recorder){
 		stopProgress();
 		recorder.stopRecording(function(url) {
@@ -356,7 +356,7 @@ $("#stopRecord").on('click',function(){
 				resultBlob = recorder.getBlob();
 			}
 		});
-		recording =false;
+		recording = false;
 
 		if (!isFirefox){
 			var blob = recorder.getBlob();
@@ -369,7 +369,6 @@ $("#stopRecord").on('click',function(){
 		  });
 
 $("#postRecord").on('click',function(){
-	clearProgress();
 	$("#postRecord").addClass("inverse");
 	$("#postRecord").prop('disabled', true);
 	if(resultBlob){
@@ -401,9 +400,9 @@ $("#postRecord").on('click',function(){
 			               	com = result.comment;
 			               }
 			                //create a new div
-			                ctp = "clickToPlay('" + result.postKey + "');";
-			                newPostDiv = "<div class='voiceTile tile ol-transparent " + tileClasses[num] +
-			                "'>" + result.creater + "<br/>" + result.hits + "<br/><i class='fa fa-play' onclick=\"" + ctp + "\"></i></div> <!-- tile -->";
+			                newPostDiv="<div class='voiceTile tile ol-transparent "+tileClasses[num]
+			                +"' >"+result.creater+"<br/>"+com
+			                +"<button class='button' onclick=\"clickToPlay('"+result.postKey+"')\">Play</button></div></div>";
 
 			                /*
 			                newPostDiv="<div class='voiceTile tile ol-transparent "+tileClasses[num]
@@ -412,7 +411,7 @@ $("#postRecord").on('click',function(){
 			                */
 
 			                var currHtml = $("#postContainer").html();
-			                currHtml = newPostDiv+currHtml;
+			                currHtml = newPostDiv + currHtml;
 			                $("#postContainer").html(currHtml);
 			               /*  var byteCharacters = atob(result.data);
 			                
@@ -476,7 +475,7 @@ $("#searchUserForm").submit(function(e){
 			    	}); */
 			    	//redirect to search result page
 			    	var newUrl = "/searchuser/"+searchName;
-			    	window.location.href=newUrl;
+			    	window.location.href = newUrl;
 			    }
 			}); 
 	});//end of document.ready
