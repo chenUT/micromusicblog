@@ -38,4 +38,4 @@ Instructions
 Application Description
 ------------
 
-See Report.pdf for application's architecture, storage model and feature description.
+See ECE1779_Group_4_Report.pdf for application's architecture, storage model and feature description.
