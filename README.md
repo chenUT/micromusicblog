@@ -34,3 +34,8 @@ Instructions
 1. In micromusicblog, run `mvn clean install`.
 2. In `micromusicblog/micromusicblog-ear`, run `mvn appengine:devserver`
 3. Go to step 4 of the _In Elipse_ instructions.
+
+Application Description
+------------
+
+See Report.pdf for application's architecture, storage model and feature description.
