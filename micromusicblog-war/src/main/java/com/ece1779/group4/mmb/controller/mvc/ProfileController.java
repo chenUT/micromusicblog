@@ -3,6 +3,7 @@ package com.ece1779.group4.mmb.controller.mvc;
 import static com.ece1779.group4.mmb.dao.OfyService.ofy;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -155,6 +156,7 @@ public class ProfileController {
 			 }
 		 }
 		 System.out.println("total posts in list: "+postInfoList.size());
+		 Collections.sort(postInfoList,new PostInfoComparator());
 		 profModel.addObject("postInfos",postInfoList);
        	 return profModel;
 	}
