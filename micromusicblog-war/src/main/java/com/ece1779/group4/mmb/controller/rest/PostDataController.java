@@ -75,8 +75,35 @@ public class PostDataController {
 		   }
 	   }
 	   System.out.println("data size"+ originalData.length);
-	   returnData.setData(originalData);
-	   returnData.setFormat(post.getFormat());
+	   
+	   byte[][] resultT = new byte[1][];
+	   String[] formats = new String[1];
+	   Key<PostMeta> backgroundMeta = post.getBackgroundPostMetaKey();
+	   if(backgroundMeta != null){
+		   PostMeta back =  ofy().load().key(backgroundMeta).now();
+		   if(back !=null){
+			   chunkCount = back.getDataMap().size();
+			   byte[] originalBack = null;
+			   for(int i =0;i<chunkCount ; i++){
+				   postDataKey = back.getPostDataKey(i);
+				   tempData = ofy().load().key(postDataKey).now();
+				   if(i == 0){
+					   originalBack = tempData.getData(); 
+				   }
+				   else{
+					   originalBack = concat(originalBack, tempData.getData());
+				   }
+			   }
+			   resultT = new byte[2][];
+			   resultT[1] = originalBack;
+			   formats = new String[2];
+			   formats[1] = back.getFormat();
+		   }
+	   }
+	   resultT[0] = originalData;
+	   returnData.setData(resultT);
+	   formats[0] = post.getFormat();
+	   returnData.setFormat(formats);
 	   //clear memory
 	   post = null;
 
@@ -96,10 +123,10 @@ public class PostDataController {
 //	}
 	
 	//User info here only have a simple user profile name and its account Name
-		 @RequestMapping(method = RequestMethod.POST)
-		 public ResponseEntity<PostInfo> createPost(HttpServletRequest req, HttpServletResponse res)
+		 @RequestMapping(value="/{mixKey}",method = RequestMethod.POST)
+		 public ResponseEntity<PostInfo> createPost(@PathVariable String mixKey, HttpServletRequest req, HttpServletResponse res)
 			      throws ServletException, IOException {
-			 	
+			 
 			 try {
 			      ServletFileUpload upload = new ServletFileUpload();
 
@@ -109,7 +136,7 @@ public class PostDataController {
 			        InputStream stream = item.openStream();
 
 			        if (item.isFormField()) {
-			          System.out.println("Got a form field: " + item.getFieldName()+" field value: "+item.toString());
+			          System.out.println("Got a form field: " + item.getFieldName()+" field value: "+item.toString()+" "+item.getContentType()+" "+item.getHeaders());
 			        } else {
 			        	 System.out.println("Got an uploaded file: " + item.getFieldName() +
 			                      ", name = " + item.getName());
@@ -172,6 +199,10 @@ public class PostDataController {
 			        	 ofy().save().entities(dataChunkList).now();
 			        	 
 			        	 postMeta.setFormat(audioFormat);
+			        	 if(!mixKey.equals("new")){
+			        		 Key<PostMeta> temp = Key.create(mixKey);
+			        	 }
+			        	 postMeta.setBackgroundPostMetaKey(temp);
 //			        	 Blob b =new Blob(theFile.toByteArray());
 			        	 //blob retrieved
 			        	 //get current user infomation

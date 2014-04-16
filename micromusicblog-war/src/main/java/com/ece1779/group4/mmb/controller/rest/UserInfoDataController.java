@@ -34,22 +34,8 @@ public class UserInfoDataController {
 	public ResponseEntity<UserInfo> getUser(@PathVariable String accountName){
 		
 	   UserInfo info;
-//	   MemcacheService syncCache=null;
-//	   try {
-//		  syncCache = MemcacheServiceFactory.getMemcacheService();
-//		   syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
-		   //info = (UserInfo)syncCache.get(accountName);
-//	   } catch (MemcacheServiceException e) {
-//           // If there is a problem with the cache,
-//           // fall through to the datastore.
-//		   info = null;
-//	   }
-	   //cache miss
-	  // if(info == null){
-		   //get userinfo from datastore
-	
-	    	//info using memcache automatically by objectify framework
-		   info = ofy().load().type(UserInfo.class).id(accountName).now();
+
+		   info = ofy().load().key(Key.create(UserInfo.class,accountName)).now();
 		   if(info == null){
 			   return new ResponseEntity<UserInfo>(HttpStatus.NOT_FOUND);
 		   }
@@ -72,18 +58,6 @@ public class UserInfoDataController {
 		Query<UserInfo> usersQ = ofy().load().type(UserInfo.class);
 		usersQ = usersQ.filter("profileName ==", profileName);
 		users = usersQ.list();
-		//users = ofy().load().type(UserInfo.class).list();
-		
-//		if(users == null){
-//			return new ResponseEntity<List<UserInfo>>(HttpStatus.NOT_FOUND);
-//		}
-//
-//		QueryResultIterator<UserInfo> iterator = usersQ.iterator();
-//		while(iterator.hasNext()){
-//			UserInfo un = iterator.next();
-//			users.add(un);
-//		}
-		 
 		UserInfo myAccount=null;
 		for(UserInfo u : users){
 			if(u.getAccountName().equals(userService.getCurrentUser().getEmail())){
@@ -94,12 +68,7 @@ public class UserInfoDataController {
 		if(myAccount != null){
 			users.remove(myAccount);
 		}
-//		if(user == null){
-//			user = new UserInfo();
-//			user.setProfileName(profileName+" "+c);
-//		}
-//		users.clear();
-//		users.add(myAccount);
+
 		return new ResponseEntity<List<UserInfo>>(users, HttpStatus.OK);
 	}
 	

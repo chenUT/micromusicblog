@@ -26,6 +26,17 @@ public class PostMeta {
 	Key<PostMeta> key;
 	
 	@JsonProperty
+	Key<PostMeta> backgroundPostMetaKey;
+	
+	public Key<PostMeta> getBackgroundPostMetaKey() {
+		return backgroundPostMetaKey;
+	}
+
+	public void setBackgroundPostMetaKey(Key<PostMeta> backgroundPostMetaKey) {
+		this.backgroundPostMetaKey = backgroundPostMetaKey;
+	}
+
+	@JsonProperty
 	Blob data;
 	
 	@JsonProperty

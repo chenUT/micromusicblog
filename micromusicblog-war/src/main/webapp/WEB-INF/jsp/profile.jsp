@@ -16,9 +16,10 @@ pageEncoding="US-ASCII"%>
 	<script src="lib/jquery/jquery.ui.widget.min.js"></script>
 	<script src="lib/jquery/jquery.mousewheel.js"></script>
 
-	<!-- Metro UI CSS JavaScript plugin -->
-	<script src="lib/load-metro.js"></script>
-
+	<!-- JavaScript plugin -->
+<!--    <script src="lib/load-metro.js"></script> -->
+	<script src="lib/metro.min.js"></script>
+	<script src="lib/RecordRTC.min.js"></script> 
 	<title>MMB: Recording and remixing for the rest of us!</title>
 </head>
 <body class="metro">
@@ -84,7 +85,8 @@ pageEncoding="US-ASCII"%>
 									<div class="tile-content" style="color:white;">
 										${postInfo.creater}<br/>
 										${postInfo.comment}
-										<button onclick="clickToPlay('${postInfo.postKey}')">Play</button>
+										<button onclick="clickToPlay('${postInfo.postKey}')">Play</button><br/><br/>
+										<button onclick="clickToMix('${postInfo.postKey}')">Mix</button>
 									</div>
 								</div>
 							</c:forEach>
@@ -99,7 +101,20 @@ pageEncoding="US-ASCII"%>
 <script type="text/javascript">
 	var tout; 		// Timeout variable (for recording)
 	var interval;
- 
+ 	var isPlaying=false;
+ 	var isFirefox = !!navigator.mozGetUserMedia;
+ 	
+   	var audioStream;
+	var recorder=null;
+	var resultBlob = null;
+	var backgroundKey = null;
+	var audioConstraints = {
+	                    audio: true,
+	                    video: false
+	                };
+	
+ 	
+ 	
 	function startProgress() {
 		var pb = $('#pb').progressbar();
 		var progress = 0;
@@ -123,32 +138,134 @@ pageEncoding="US-ASCII"%>
 		pb.progressbar('value', 0);
 		console.log('clearing progress ');
 	};
+	
 
+	
+	var clickToMix = function(backgroundKey1){
+		var safeStringBackground = encodeURI(backgroundKey1);
+		 backgroundKey = safeStringBackground;
+		if(!isPlaying){
+	        $.ajax({
+	                type:"GET",
+	                url:"/api/postData/"+safeStringBackground,
+	                success:function(result){
+	                        var byteCharacters = atob(result.data[0]);
+	
+	                        var byteNumbers = new Array(byteCharacters.length);
+	                        for (var i = 0; i < byteCharacters.length; i++) {
+	                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+	                        }
+	                        var byteArray = new Uint8Array(byteNumbers);
+	                        var audioType = result.format[0];
+	                        var receiveBlob = new Blob([byteArray],{type:audioType});
+	                //alert(receiveBlob.size);
+	                var audio = document.createElement('audio'); 
+	                audio.src = window.URL.createObjectURL(receiveBlob);
+	                audio.play();
+	                //at same time we start recording
+	                clearProgress();
+					 //$("#stopRecord").removeClass("inverse");
+			         $("#startRecord").addClass("inverse");
+	                
+			         if (!audioStream){
+					       navigator.getUserMedia(audioConstraints, function(stream) {
+					           if (window.IsChrome) {
+					           		stream = new window.MediaStream(stream.getAudioTracks());
+					           }
+					           audioStream = stream;
+					           recorder = window.RecordRTC(stream, {
+					               type: 'audio'
+					           });
+					           recorder.startRecording();
+					           startProgress();
+					           //$("#stopRecord").prop('disabled', false);
+					       }, function(err) {
+					       	alert(err);
+					       });
+				    }
+				    else {
+				        if (recorder){
+				        	recorder.startRecording();
+				        	startProgress();
+				        	//$("#stopRecord").prop('disabled', false);;
+				        }				        
+					    }
+					    window.isAudio = true;
+					    $("#startRecord").prop('disabled', true);
+					     
+	               
+	                $(audio).bind("ended",function(){
+	                	isPlaying=false;
+        				$("#startRecord").removeClass("inverse");
+        				//$("#stopRecord").addClass("inverse");
+        				$("#startRecord").prop('disabled', false);
+        				$("#stopRecord").prop('disabled', true);
+        				$("#postRecord").prop('disabled', false);
+        				$("#postRecord").removeClass("inverse");
+	        			 if (recorder){
+	        				  stopProgress();
+	        		          recorder.stopRecording(function(url) {
+	        		        	  if (isFirefox){
+	        			         		resultBlob = recorder.getBlob();
+	        			         	}
+	        			          });
+	        			          if (!isFirefox){
+	        			          	var blob = recorder.getBlob();
+	        			          	resultBlob = blob;
+	        			          }
+	        		      }
+	                });
+	                isPlaying=true;
+	                //alert("playing");
+	            },
+	            error:function(a,b,c){
+	                    alert(a+" "+b+" "+c);
+	            }
+         });
+		};
+		
+		
+	};
+	
 	var clickToPlay = function(postKey){
 		var safeString = encodeURI(postKey);
-		$.ajax({
-			type:"GET",
-			url:"/api/postData/"+safeString,
-			success:function(result){
-				var byteCharacters = atob(result.data);
-
-				var byteNumbers = new Array(byteCharacters.length);
-				for (var i = 0; i < byteCharacters.length; i++) {
-					byteNumbers[i] = byteCharacters.charCodeAt(i);
-				}
-				var byteArray = new Uint8Array(byteNumbers);
-				var audioType = result.format;
-				var receiveBlob = new Blob([byteArray],{type:audioType});
- 		       //alert(receiveBlob.size);
- 		       var audio = document.createElement('audio'); 
- 		       audio.src = window.URL.createObjectURL(receiveBlob);
- 		       audio.play();
- 		       //alert("playing");
- 		   },
- 		   error:function(a,b,c){
- 		   	alert(a+" "+b+" "+c);
- 		   }
- 		});
+		if(!isPlaying){
+	        $.ajax({
+	                type:"GET",
+	                url:"/api/postData/"+safeString,
+	                success:function(result){
+	                	var audio=[audio1 ,audio2];
+	                		var resultLength = result.data.length;
+	                		for(var i=0; i<resultLength ; i++){
+	                			 var byteCharacters = atob(result.data[i]);
+	                			 var audioType = result.format[i];	
+	 	                        var byteNumbers = new Array(byteCharacters.length);
+	 	                        for (var i = 0; i < byteCharacters.length; i++) {
+	 	                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+	 	                        }
+	 	                        var byteArray = new Uint8Array(byteNumbers);
+	 	                        
+	 	                        var receiveBlob = new Blob([byteArray],{type:audioType});
+	 	                		//alert(receiveBlob.size);
+	 	               		    audio[i] = document.createElement('audio'); 
+	 	                		audio[i].src = window.URL.createObjectURL(receiveBlob);
+	 	                		audio[i].mediaGroup = "mixGroup";
+	 	                		audio[i].controller.play();
+	                		}	
+	                       
+	               
+	                audio[0].controller.play();
+	                $(audio[0]).bind("ended",function(){
+	                	isPlaying=false;
+	                });
+	                isPlaying=true;
+	                //alert("playing");
+	            },
+	            error:function(a,b,c){
+	                    alert(a+" "+b+" "+c);
+	            }
+         });
+		};
  	};
    
  	
@@ -158,7 +275,7 @@ pageEncoding="US-ASCII"%>
 	$(document).ready(function(){
 		var channel = new goog.appengine.Channel('${token}');
 		var socket = channel.open();
-		var resultBlob = null;
+	
 	    socket.onopen = onOpened;
 	    socket.onmessage = onMessage;
 	    socket.onerror = onError;
@@ -178,48 +295,38 @@ pageEncoding="US-ASCII"%>
 
     	$("#stopRecord").prop("disabled",true);
     	$('#postRecord').prop("disabled",true);
-    	
-    	//add random color to our tiles
     
     	$(".voiceTile").each(function(i,obj){
     		var num = Math.floor(Math.random() * 7);
     		$(this).addClass(tileClasses[num]);
     	});
-    	var audioStream;
-    	var recorder=null;
-    	var audioConstraints = {
-    	                    audio: true,
-    	                    video: false
-    	                };
-    	
-    	 var timeOutFunction = function() { 
-    		       	if (recorder){
-    		       		stopProgress();
-						$("#startRecord").prop('disabled', false);
-						$("#stopRecord").prop('disabled', true);
-						$("#postRecord").prop('disabled', false);
-						$("#startRecord").removeClass("inverse");
-						$("#stopRecord").addClass("inverse");
-						$("#postRecord").removeClass("inverse");
-    			          recorder.stopRecording(function(url) {
-    			              //document.getElementById('audio-url-preview').innerHTML = '<a href="' + url + '" target="_blank">Recorded Audio URL</a>';
-    			         	if (isFirefox){
-    			         		resultBlob = recorder.getBlob();
-    			         	}
-    			         	
-    			    });
-    		          if (!isFirefox){
-    		          	var blob = recorder.getBlob();
-    		          	if(blob!==null)
-    		          		resultBlob = blob;
-    		          }
-    		       }
-    	    };
-    	
-    	
-    	var isFirefox = !!navigator.mozGetUserMedia;
 
-		 $("#startRecord").on('click',function(){
+   	 var timeOutFunction = function() { 
+	       	if (recorder){
+	       		stopProgress();
+				$("#startRecord").prop('disabled', false);
+				$("#stopRecord").prop('disabled', true);
+				$("#postRecord").prop('disabled', false);
+				$("#startRecord").removeClass("inverse");
+				$("#stopRecord").addClass("inverse");
+				$("#postRecord").removeClass("inverse");
+		          recorder.stopRecording(function(url) {
+		              //document.getElementById('audio-url-preview').innerHTML = '<a href="' + url + '" target="_blank">Recorded Audio URL</a>';
+		         	if (isFirefox){
+		         		resultBlob = recorder.getBlob();
+		         	}
+		         	
+		    });
+	          if (!isFirefox){
+	          	var blob = recorder.getBlob();
+	          	if(blob!==null)
+	          		resultBlob = blob;
+	          }
+	       }
+ };
+    	
+
+		 $("#startRecord").on('click', function(){
 			 clearProgress();
 			 $("#stopRecord").removeClass("inverse");
 	         $("#startRecord").addClass("inverse");
@@ -277,21 +384,30 @@ pageEncoding="US-ASCII"%>
 		 });
 		 
 		 $("#postRecord").on('click',function(){
+			 var postType;
+
+			 if(backgroundKey === null){
+				 postType = "new";
+			 }
+			 else{
+				 postType = backgroundKey;
+			 }
 			 if(resultBlob){
 				 var fd = new FormData();
 				 var audioFormat = resultBlob.type;
                  fd.append("format",audioFormat);
 				 fd.append(audioFormat,resultBlob);
-				 alert(resultBlob.size);
+				 //alert(resultBlob.size);
 				 $.ajax({
 					    type: 'POST',
-					    url: '/api/postData',
+					    url: '/api/postData/'+postType,
 					    data: fd,
 					    processData: false,
 					    contentType: false,
 					    success: function(result) {
 					    	alert("Success");
 					    	resultBlob = null;
+					    	backgroundKey=null;
 					    	$("#postRecord").prop('disabled', true);
 			        	},
 			        	error: function (xhr, ajaxOptions, thrownError) {
@@ -299,6 +415,7 @@ pageEncoding="US-ASCII"%>
 			                    // not really an error
 			                    $("#postRecord").prop('disabled', true);
 			                    resultBlob = null;
+			                    backgroundKey=null;
 			                    return;
 			                } else {
 			                	alert("XHR Status = "+xhr.status);
@@ -354,7 +471,7 @@ $("#searchUserForm").submit(function(e){
 		var newPostDiv="<div class='voiceTile tile ol-transparent "+tileClasses[Math.floor(Math.random() * 7)]
 			+"'><div class='tile-content' style='color:white;'>"
 			+jsonData.creater+"<br/>"+com
-			+"<button onclick=clickToPlay('"+jsonData.postKey+"')>Play</button></div></div>";
+			+"<button onclick=clickToPlay('"+jsonData.postKey+"')>Play</button><br/><br/><button onclick=clickToMix('"+jsonData.postKey+"')>Mix</button></div></div>";
 
 		var currHtml = $("#postContainer").html();
 		currHtml = newPostDiv+currHtml;

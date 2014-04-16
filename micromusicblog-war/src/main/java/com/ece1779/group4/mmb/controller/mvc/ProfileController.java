@@ -35,7 +35,7 @@ public class ProfileController {
 		 UserService userService = UserServiceFactory.getUserService(); 
 		 String accountName = userService.getCurrentUser().getEmail();
 		 System.out.println("account name: "+accountName);
-		 UserInfo user = ofy().load().type(UserInfo.class).filter("accountName ==",userService.getCurrentUser().getEmail()).first().now();
+		 UserInfo user = ofy().load().key(Key.create(UserInfo.class,accountName)).now();
 	     
          if(user == null){
         	System.out.println("userinfo null");
