@@ -139,11 +139,11 @@ public class ProfileController {
 						 currPost = postsForUser.get(i);
 						 tempPostInfo = new PostInfo();
 						 if(currPost !=null){
-							 if(currPost.getComment() == null){
-								 tempPostInfo.setComment("No Comment");
+							 if(currPost.getBackgroundPostMetaKey() == null){
+								 tempPostInfo.setComment("Original");
 							 }
 							 else{
-								 tempPostInfo.setComment(currPost.getComment());
+								 tempPostInfo.setComment("Mixed");
 							 }
 							 tempPostInfo.setCreater(info.getProfileName());
 							 tempPostInfo.setPostKey(currPost.getKey().getString());

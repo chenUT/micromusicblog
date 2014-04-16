@@ -17,7 +17,6 @@
     <mvc:resources mapping="/lib/**" location="/WEB-INF/lib/"/>
     <mvc:resources mapping="/css/**" location="/WEB-INF/css/"/>
     
-    <bean id ="LoginBean" class="com.ece1779.group4.mmb.controller.mvc.LoginController"/> 
     <bean id ="ProfileBean" class="com.ece1779.group4.mmb.controller.mvc.ProfileController"/>
     <bean id ="RegisterBean" class="com.ece1779.group4.mmb.controller.mvc.RegisterController"/>
     <bean id ="SearchUserBean" class="com.ece1779.group4.mmb.controller.mvc.SearchUserController"/>
