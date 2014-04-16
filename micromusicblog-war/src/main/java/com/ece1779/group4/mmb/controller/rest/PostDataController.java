@@ -201,8 +201,9 @@ public class PostDataController {
 			        	 postMeta.setFormat(audioFormat);
 			        	 if(!mixKey.equals("new")){
 			        		 Key<PostMeta> temp = Key.create(mixKey);
+			        		 postMeta.setBackgroundPostMetaKey(temp);
 			        	 }
-			        	 postMeta.setBackgroundPostMetaKey(temp);
+			        	
 //			        	 Blob b =new Blob(theFile.toByteArray());
 			        	 //blob retrieved
 			        	 //get current user infomation
