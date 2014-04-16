@@ -5,7 +5,7 @@ pageEncoding="US-ASCII"%>
 <head>
 	<title>MicroMix</title>
 	<meta charset="utf-8" />
-	<meta name="viewport" content="initial-scale=1, minimal-ui" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 	<link href='//fonts.googleapis.com/css?family=Roboto:400,100,400italic,700italic,700' rel='stylesheet' type='text/css'>
 
@@ -22,7 +22,7 @@ pageEncoding="US-ASCII"%>
 
 	<main class="site__content island" role="content">
 		<div class="wrap">
-			<a href="/profile">Login</a>
+			<a href="/profile" style="z-index:999;">Login</a>
 		</div>
 	</main><!-- /.site__content -->
 

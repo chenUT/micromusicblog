@@ -11,10 +11,15 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
-
+/**
+ * Detailed post info we stored in datastore
+ * this is cached in memcahe by objectify automatically
+ * @author chen
+ *
+ */
 @JsonIgnoreProperties(ignoreUnknown=true)
 @Entity
-@Cache
+@Cache //use memcache
 public class PostMeta {
 	@Id
 	String id; //Id is in the format of userAccount_timestamp so it would be unique and easier for query to compare

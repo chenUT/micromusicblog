@@ -37,7 +37,9 @@ pageEncoding="US-ASCII"%>
 								${user.profileName}
 								<div>
 									<input class="followAccount" name="account" type="hidden" value="${user.accountName}">
+									
 									<button class="followUser">${user.isFollowing ? "unfollow" : "follow"}</button>
+									
 								</div>
 							</div> <!-- list content -->
 						</a>

@@ -1,6 +1,5 @@
 package com.ece1779.group4.mmb.model;
 
-import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +10,12 @@ import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
-
+/**
+ * entity to store user info
+ * this is cached in memcahe by objectify automatically
+ * @author chen
+ *
+ */
 @JsonIgnoreProperties(ignoreUnknown=true)
 @Entity
 @Cache

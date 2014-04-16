@@ -2,6 +2,11 @@ package com.ece1779.group4.mmb.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * json POJO return to user describe general user information in search result
+ * @author chen
+ *
+ */
 public class UserDetail {
 	@JsonProperty
     String accountName;
@@ -17,8 +22,6 @@ public class UserDetail {
 
 	@JsonProperty
 	String profileName;
-	
-	
 	
 	public void setProfileName(String profileName){
 		this.profileName = profileName;

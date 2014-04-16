@@ -16,6 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.ece1779.group4.mmb.model.UserInfo;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
+import com.googlecode.objectify.Key;
 
 @Controller
 @RequestMapping("/register")
@@ -28,7 +29,7 @@ public class RegisterController {
 		
 	    UserService userService = UserServiceFactory.getUserService();
 	    String userAccountName = userService.getCurrentUser().getEmail();
-	    UserInfo user = ofy().load().type(UserInfo.class).filter("accountName ==",userAccountName).first().now();
+	    UserInfo user = ofy().load().key(Key.create(UserInfo.class,userAccountName)).now();
 	    if(user != null){
 	    	resp.sendRedirect("/profile");
 	    	return null;

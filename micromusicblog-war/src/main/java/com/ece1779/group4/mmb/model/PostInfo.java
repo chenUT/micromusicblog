@@ -2,6 +2,11 @@ package com.ece1779.group4.mmb.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * post summary we return back to user as general post info
+ * @author chen
+ *
+ */
 public class PostInfo {
 	
 	@JsonProperty

@@ -1,12 +1,18 @@
 package com.ece1779.group4.mmb.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.googlecode.objectify.annotation.Id;
 
+/**
+ * the is the json object POJO we return to user when user request post data to play
+ * @author chen
+ *
+ */
 public class PostDataReturn {
+	//Foreground audio
 	@JsonProperty
 	byte[] data1;
 
+	//Background audio
 	@JsonProperty
 	byte[] data2;
 	

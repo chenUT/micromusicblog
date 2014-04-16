@@ -38,7 +38,7 @@ public class SearchUserController {
 		usersQ = usersQ.filter("profileName ==", profileName);
 		users = usersQ.list();
 
-		UserInfo myInfo = ofy().load().type(UserInfo.class).filter("accountName ==",myAccountId).first().now();
+		UserInfo myInfo = ofy().load().key(Key.create(UserInfo.class,myAccountId)).now();
 	     
 		//users = ofy().load().type(UserInfo.class).list();
 		
@@ -49,7 +49,6 @@ public class SearchUserController {
 //		QueryResultIterator<UserInfo> iterator = usersQ.iterator();
 //		while(iterator.hasNext()){
 //			UserInfo un = iterator.next();
-//			users.add(un);
 //		}
 		 
 		 Map<Key<UserInfo>,UserInfo> followingMap=null;
@@ -61,7 +60,10 @@ public class SearchUserController {
 		
 		List<UserDetail> details = new ArrayList<UserDetail>();
 		UserDetail resultUser;
-		for(UserInfo u : users){
+		UserInfo u;
+		for(int i=0;i<users.size();i++){
+//		for(UserInfo u : users){
+			u = users.get(i);
 			if(!u.getAccountName().equals(myAccountId)){
 				resultUser = new UserDetail();
 				resultUser.setAccountName(u.getAccountName());
@@ -86,25 +88,9 @@ public class SearchUserController {
 //		}
 		
 		System.out.println("users count "+users.size());
-		 List<String> t = getList();
 		 searchResultMAV.addObject("lists",details);
 		return searchResultMAV;
 		
 	}
-	private List<String> getList() {
-		 
-		List<String> list = new ArrayList<String>();
-		list.add("List A");
-		list.add("List B");
-		list.add("List C");
-		list.add("List D");
-		list.add("List 1");
-		list.add("List 2");
-		list.add("List 3");
- 
-		return list;
- 
-	}
-	
 
 }

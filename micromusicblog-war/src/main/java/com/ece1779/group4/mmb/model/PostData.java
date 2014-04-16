@@ -7,6 +7,11 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 
+/**
+ * The is the postdata entity stored in datastore
+ * @author chen
+ *
+ */
 @Entity
 public class PostData {
 	@Id

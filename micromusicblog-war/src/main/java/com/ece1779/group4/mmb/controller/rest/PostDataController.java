@@ -38,7 +38,11 @@ import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.googlecode.objectify.Key;
-
+/**
+ * RESTful api handles post data related request
+ * @author chen
+ *
+ */
 @RequestMapping(value="/postData")
 @Controller
 public class PostDataController {
@@ -247,8 +251,6 @@ public class PostDataController {
 			        	 ChannelService channelService = ChannelServiceFactory.getChannelService();
 			        	 String channelKey="";
 			        	 //post to the post user first
-			        	
-			        	 
 			        	 List<Key<UserInfo>> followers = poster.getFollowers();
 			        	 System.out.println("total followers count: "+followers.size());
 			        	 //create new post to json
@@ -264,7 +266,6 @@ public class PostDataController {
 			        			 channelService.sendMessage(new ChannelMessage(channelKey,json));
 			        		 }
 			        	 } catch (JsonProcessingException e) {
-			        		 // TODO Auto-generated catch block
 			        		 e.printStackTrace();
 			        	 }
 			        	 return new ResponseEntity<PostInfo>(newPostInfo, HttpStatus.OK);
@@ -274,24 +275,24 @@ public class PostDataController {
 			    	System.out.println(ex.getMessage());
 			        throw new ServletException(ex);
 			    }
-			 
+			 //if everything fails we return null
 			 return null;
-			 	
 		}
 		 
 		//User info here only have a simple user profile name and its account Name
-		 @RequestMapping(value="/{postId}", method = RequestMethod.DELETE)
-		 public  ResponseEntity<PostMeta> createPost(@PathVariable String postId){
-
-			 ofy().delete().type(PostMeta.class).id(postId).now();
-			 //TODO delete all post data as well
-			 return new ResponseEntity<PostMeta>(HttpStatus.NO_CONTENT);
-		} 
+		 //delete is not implemented at current stage
+//		 @RequestMapping(value="/{postId}", method = RequestMethod.DELETE)
+//		 public  ResponseEntity<PostMeta> createPost(@PathVariable String postId){
+//
+//			 ofy().delete().type(PostMeta.class).id(postId).now();
+//			 //TODO delete all post data as well
+//			 return new ResponseEntity<PostMeta>(HttpStatus.NO_CONTENT);
+//		} 
 	/**
 	 *  
 	 * @param first
 	 * @param second
-	 * @return concated array from first and second
+	 * @return connected array with first and second
 	 */
 	 public static byte[] concat(byte[] first, byte[] second) {
 		 byte[] result = Arrays.copyOf(first, first.length + second.length);

@@ -23,30 +23,26 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.cmd.Query;
-
+/**
+ * RESTful api to handle user related information
+ * @author chen
+ *
+ */
 @Controller
 @RequestMapping("/userData")
 public class UserInfoDataController {
 	
-    private static Logger logger = Logger.getLogger(UserInfo.class.getName());
+    @SuppressWarnings("unused")
+	private static Logger logger = Logger.getLogger(UserInfo.class.getName());
 
 	@RequestMapping(value="/id/{accountName}",method=RequestMethod.GET)
 	@ResponseBody
 	public ResponseEntity<UserInfo> getUser(@PathVariable String accountName){
-		
-	   UserInfo info;
-
-		   info = ofy().load().key(Key.create(UserInfo.class,accountName)).now();
-		   if(info == null){
-			   return new ResponseEntity<UserInfo>(HttpStatus.NOT_FOUND);
-		   }
-		   
-		   //store user info to memcache
-//		   if(syncCache != null){
-//			   syncCache.put(accountName, info);
-//		   }
-	   //}
-//		ofy().
+		UserInfo info;
+		info = ofy().load().key(Key.create(UserInfo.class,accountName)).now();
+		if(info == null){
+			return new ResponseEntity<UserInfo>(HttpStatus.NOT_FOUND);
+		}
 		return new ResponseEntity<UserInfo>(info, HttpStatus.OK);
 	}
 	
@@ -54,7 +50,6 @@ public class UserInfoDataController {
 	@ResponseBody
 	public ResponseEntity<List<UserInfo>> getUserByName(@PathVariable String profileName){
 		UserService userService = UserServiceFactory.getUserService();
-
 		List<UserInfo> users = new ArrayList<UserInfo>();
 		Query<UserInfo> usersQ = ofy().load().type(UserInfo.class);
 		usersQ = usersQ.filter("profileName ==", profileName);
@@ -74,6 +69,7 @@ public class UserInfoDataController {
 	}
 	
 	//User info here only have a simple user profile name and its account Name
+	//ofy save will use memcache automatcally
 	 @RequestMapping(value="/profile/{profileName}",method = RequestMethod.POST,
 	    		headers = {"Content-type=application/json"})
 	 @ResponseStatus(value = HttpStatus.CREATED)
@@ -87,7 +83,6 @@ public class UserInfoDataController {
 		 	if(existUser !=null){
 		 		existUser.setProfileName(profileName);
 		 		ofy().save().entity(existUser).now();
-		 		//return new ResponseEntity<UserInfo>(HttpStatus.CREATED);
 		 	}
 		 	else{
 		 		UserInfo userInfo = new UserInfo();
@@ -96,20 +91,10 @@ public class UserInfoDataController {
 		 		userInfo.setFollowerCount(0);
 		 		userInfo.setKey(Key.create(UserInfo.class,userService.getCurrentUser().getEmail()));
 		 		ofy().save().entity(userInfo).now();
-		 		
 		 	}
-		 	//return new ResponseEntity<UserInfo>(HttpStatus.CREATED);
-		 	//put userinfo in memcache
-//		 	MemcacheService syncCache;
-//		 	try{
-//		 		syncCache = MemcacheServiceFactory.getMemcacheService();
-//		 		syncCache.put(user, arg1);
-//		 	}
-		 	
-		 	
 	}
-	 
-		//User info here only have a simple user profile name and its account Name
+
+	 //following target user
 	 @RequestMapping(value="/follow",method = RequestMethod.PUT,
 			 headers = {"Content-type=application/json"})
 	 public ResponseEntity<UserInfo> followUser(@RequestBody UserDetail targetUser){
@@ -136,15 +121,6 @@ public class UserInfoDataController {
 		 	System.out.println("i am following :"+myInfo.getFollowings().size()+" people now");
 		 	ofy().save().entity(myInfo).now();
 		 	
-		 	//UserInfo myInfoText = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
-			//System.out.println("i am following :"+myInfoText.getFollowings().size()+" people now (retrive data from datastore)");
-		 	//put userinfo in memcache
-//		 	MemcacheService syncCache;
-//		 	try{
-//		 		syncCache = MemcacheServiceFactory.getMemcacheService();
-//		 		syncCache.put(user, arg1);
-//		 	}
-		 	
 		 	return new ResponseEntity<UserInfo>(HttpStatus.NO_CONTENT);
 	}
 	 
@@ -168,53 +144,27 @@ public class UserInfoDataController {
 		 	ofy().save().entity(target);
 		 	myInfo.removeFollowing(target.getKey());
 		 	ofy().save().entity(myInfo);
-		 	
-		 	//put userinfo in memcache
-//		 	MemcacheService syncCache;
-//		 	try{
-//		 		syncCache = MemcacheServiceFactory.getMemcacheService();
-//		 		syncCache.put(user, arg1);
-//		 	}
-		 	
+
 		 	return new ResponseEntity<UserInfo>(HttpStatus.NO_CONTENT);
 	}
 	 
 	 
 	 
-	 
+	 //put existing user in datastore
 	 @RequestMapping(value="/{accountName}", method = RequestMethod.PUT,
 			 headers = {"Content-type=application/json"})
 	 public  ResponseEntity<UserInfo> updateUser(@PathVariable String accountName, @RequestBody UserInfo userInfo){
-		 ofy().save().entity(userInfo);
-//		 UserInfo newInfo = ofy().load().type(UserInfo.class).id(accountName).now();
+		 
+		ofy().save().entity(userInfo);
 		return new ResponseEntity<UserInfo>(HttpStatus.NO_CONTENT); 
 	 }
 	 
-	//User info here only have a simple user profile name and its account Name
+	 //User info here only have a simple user profile name and its account Name
+	 //delete is not used on current stage
 	 @RequestMapping(value="/{accountName}", method = RequestMethod.DELETE)
 	 public  ResponseEntity<UserInfo> createUser(@PathVariable String accountName){
-		 //first remove from memcache
-		// MemcacheService syncCache=null;
-//		 boolean deleted = ;
-//		 try {
-//			  syncCache = MemcacheServiceFactory.getMemcacheService();
-//			  if(syncCache.contains(accountName)){
-//				deleted = syncCache.delete(accountName);
-//				if(deleted){
-					ofy().delete().type(UserInfo.class).id(accountName).now();
-//				}
-			//  }
-//		   } catch (MemcacheServiceException e) {
-//	           // If there is a problem with the cache,
-//	           // fall through to the datastore.
-//		   }
-//		 
-//		 if(deleted){
-			 return new ResponseEntity<UserInfo>(HttpStatus.NO_CONTENT);
-//		 }
-//		 else{
-//			 return new ResponseEntity<UserInfo>(HttpStatus.NOT_FOUND);
-//		 }
+		ofy().delete().type(UserInfo.class).id(accountName).now();
+		return new ResponseEntity<UserInfo>(HttpStatus.NO_CONTENT);
 		 
 	} 
 }
