@@ -76,8 +76,11 @@ public class PostDataController {
 	   }
 	   System.out.println("data size"+ originalData.length);
 	   
-	   byte[][] resultT = new byte[1][];
-	   String[] formats = new String[1];
+
+	   returnData.setData1(originalData);	   
+	   returnData.setFormat1(post.getFormat());
+
+
 	   Key<PostMeta> backgroundMeta = post.getBackgroundPostMetaKey();
 	   if(backgroundMeta != null){
 		   PostMeta back =  ofy().load().key(backgroundMeta).now();
@@ -94,16 +97,11 @@ public class PostDataController {
 					   originalBack = concat(originalBack, tempData.getData());
 				   }
 			   }
-			   resultT = new byte[2][];
-			   resultT[1] = originalBack;
-			   formats = new String[2];
-			   formats[1] = back.getFormat();
+			   returnData.setFormat2(back.getFormat());
+			   returnData.setData2(originalBack);
 		   }
 	   }
-	   resultT[0] = originalData;
-	   returnData.setData(resultT);
-	   formats[0] = post.getFormat();
-	   returnData.setFormat(formats);
+
 	   //clear memory
 	   post = null;
 
@@ -219,7 +217,7 @@ public class PostDataController {
 
 			        	 //find current user and add it to its post list
 			        	 //this depends on google account service
-			        	 UserInfo poster =  ofy().load().type(UserInfo.class).filter("accountName ==",userAccount).first().now();
+			        	 UserInfo poster =  ofy().load().key(Key.create(UserInfo.class,userAccount)).now();
 			        	 //					  add post to poster
 			        	 poster.addPost(postMeta.getKey());
                          System.out.println("post added to poster");
@@ -235,7 +233,14 @@ public class PostDataController {
 			        	 newPostInfo.setPostKey(postMeta.getKey().getString());
 			        	 newPostInfo.setCreateTime(postMeta.getCreatedTime());
 			        	 newPostInfo.setOwnerKey(poster.getKey().getString());
-			        	 newPostInfo.setComment(postMeta.getComment());
+			        	 
+			        	 if(postMeta.getBackgroundPostMetaKey() == null){
+			        		 newPostInfo.setComment("Original");
+			        	 }
+			        	 else{
+			        		 newPostInfo.setComment("Mixed");
+			        	 }
+			        	
 
 			        	 //notify all followers
                          System.out.println("creating channel to followers");

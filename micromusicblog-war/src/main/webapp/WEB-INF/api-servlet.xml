@@ -13,7 +13,6 @@
         
     <mvc:annotation-driven />
 
-	<bean id ="GreetingBean" class="com.ece1779.group4.mmb.GreetingController"/>
 	<bean id ="UserProfileBean" class="com.ece1779.group4.mmb.controller.rest.UserInfoDataController"/>
 <bean id ="PostDataBean" class="com.ece1779.group4.mmb.controller.rest.PostDataController"/>	
 

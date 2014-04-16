@@ -38,7 +38,7 @@ public class ProfileController {
 		 UserInfo user = ofy().load().key(Key.create(UserInfo.class,accountName)).now();
 	     
          if(user == null){
-        	System.out.println("userinfo null");
+        	System.out.println("userinfo not in datastore");
         	ModelAndView regModel = new ModelAndView("register");
        	 	return regModel;
          }
@@ -72,11 +72,11 @@ public class ProfileController {
 //			 Post currPost = postsFromMe.get(i);
 			 tempPostInfo = new PostInfo();
 			 if(currPost !=null){
-				 if(currPost.getComment() == null){
-					 tempPostInfo.setComment("No Comment");
+				 if(currPost.getBackgroundPostMetaKey() == null){
+					 tempPostInfo.setComment("Original");
 				 }
 				 else{
-					 tempPostInfo.setComment(currPost.getComment());
+					 tempPostInfo.setComment("Mixed");
 				 }
 				 tempPostInfo.setCreater(user.getProfileName());
 				 tempPostInfo.setPostKey(currPost.getKey().getString());

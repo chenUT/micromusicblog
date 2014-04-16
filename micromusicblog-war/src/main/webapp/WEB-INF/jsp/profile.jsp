@@ -57,9 +57,9 @@ pageEncoding="US-ASCII"%>
 			     <div class="grid fuild">
 				  <div class="row">
 				  
-	            	<div class=" span2 padding2" style="text-align: center; background-color:#EDEDED">Listening<br/>${followingCount}</div>
-	  				<div class=" span2 padding2" style="text-align: center; background-color:#EDEDED">Post<br/>${postCount}</div>
-				   	<div class=" span2 padding2" style="text-align: center; background-color:#EDEDED">Listener<br/>${followerCount}</div>
+	            	<div class=" span2 padding2" style="text-align: center; background-color:#EDEDED">Listening<br/><p id="followingCountNumber">${followingCount}</p></div>
+	  				<div class=" span2 padding2" style="text-align: center; background-color:#EDEDED" >Post<br/><p id="postCountNumber">${postCount}</p></div>
+				   	<div class=" span2 padding2" style="text-align: center; background-color:#EDEDED">Listener<br/><p id="followerCountNumber">${followerCount}</p></div>
 				 </div>
 			   	</div>
 			 </div>
@@ -84,9 +84,11 @@ pageEncoding="US-ASCII"%>
 								<div class="voiceTile tile ol-transparent">
 									<div class="tile-content" style="color:white;">
 										${postInfo.creater}<br/>
-										${postInfo.comment}
-										<button onclick="clickToPlay('${postInfo.postKey}')">Play</button><br/><br/>
-										<button onclick="clickToMix('${postInfo.postKey}')">Mix</button>
+										${postInfo.comment}<br/>
+										<button onclick="clickToPlay('${postInfo.postKey}')" style="margin-bottom:5px; margin-top:5px;">Play</button><br/>
+										<c:if test="${postInfo.comment =='Original'}">
+										   <button onclick="clickToMix('${postInfo.postKey}')">Mix</button>
+										</c:if>
 									</div>
 								</div>
 							</c:forEach>
@@ -141,22 +143,21 @@ pageEncoding="US-ASCII"%>
 	
 
 	
-	var clickToMix = function(backgroundKey1){
-		var safeStringBackground = encodeURI(backgroundKey1);
-		 backgroundKey = safeStringBackground;
+	var clickToMix = function(backgroundKeyP){
+		backgroundKey = encodeURI(backgroundKeyP);
 		if(!isPlaying){
 	        $.ajax({
 	                type:"GET",
-	                url:"/api/postData/"+safeStringBackground,
+	                url:"/api/postData/"+backgroundKey,
 	                success:function(result){
-	                        var byteCharacters = atob(result.data[0]);
+	                        var byteCharacters = atob(result.data1);
 	
 	                        var byteNumbers = new Array(byteCharacters.length);
 	                        for (var i = 0; i < byteCharacters.length; i++) {
 	                                byteNumbers[i] = byteCharacters.charCodeAt(i);
 	                        }
 	                        var byteArray = new Uint8Array(byteNumbers);
-	                        var audioType = result.format[0];
+	                        var audioType = result.format1;
 	                        var receiveBlob = new Blob([byteArray],{type:audioType});
 	                //alert(receiveBlob.size);
 	                var audio = document.createElement('audio'); 
@@ -207,6 +208,7 @@ pageEncoding="US-ASCII"%>
 	        		          recorder.stopRecording(function(url) {
 	        		        	  if (isFirefox){
 	        			         		resultBlob = recorder.getBlob();
+	        			         		//alert("test: "+resultBlob.size);
 	        			         	}
 	        			          });
 	        			          if (!isFirefox){
@@ -231,31 +233,57 @@ pageEncoding="US-ASCII"%>
 		var safeString = encodeURI(postKey);
 		if(!isPlaying){
 	        $.ajax({
-	                type:"GET",
-	                url:"/api/postData/"+safeString,
-	                success:function(result){
-	                	var audio=[audio1 ,audio2];
-	                		var resultLength = result.data.length;
-	                		for(var i=0; i<resultLength ; i++){
-	                			 var byteCharacters = atob(result.data[i]);
-	                			 var audioType = result.format[i];	
-	 	                        var byteNumbers = new Array(byteCharacters.length);
-	 	                        for (var i = 0; i < byteCharacters.length; i++) {
-	 	                                byteNumbers[i] = byteCharacters.charCodeAt(i);
-	 	                        }
-	 	                        var byteArray = new Uint8Array(byteNumbers);
-	 	                        
-	 	                        var receiveBlob = new Blob([byteArray],{type:audioType});
-	 	                		//alert(receiveBlob.size);
-	 	               		    audio[i] = document.createElement('audio'); 
-	 	                		audio[i].src = window.URL.createObjectURL(receiveBlob);
-	 	                		audio[i].mediaGroup = "mixGroup";
-	 	                		audio[i].controller.play();
-	                		}	
-	                       
-	               
-	                audio[0].controller.play();
-	                $(audio[0]).bind("ended",function(){
+                type:"GET",
+                url:"/api/postData/"+safeString,
+                success:function(result){
+
+                	var audio1 = document.createElement('audio'); 
+                	var audio2 = null; 
+                	
+                	
+        			var byteCharacters = atob(result.data1);
+        			var audioType = result.format1;	
+                    var byteNumbers = new Array(byteCharacters.length);
+                    for (var j = 0; j < byteCharacters.length; j++) {
+                            byteNumbers[j] = byteCharacters.charCodeAt(j);
+                    }
+                    var byteArray = new Uint8Array(byteNumbers);
+                    audio1.type = audioType;
+                    var front = new Blob([byteArray],{type:audioType});
+                    audio1.src =  window.URL.createObjectURL(front);
+                	
+                        //var receiveBlob = new Blob([byteArray],{type:audioType});
+                		//alert(receiveBlob.size);
+               		 //    audio[i] = document.createElement('audio'); 
+                		// audio[i].src = window.URL.createObjectURL(receiveBlob);
+                		// audio[i].mediaGroup = "mixGroup";
+                		// audio[i].controller.play();
+                	
+                	if(result.data2 !==null){
+                		audio2 = document.createElement('audio');
+            			var byteCharactersB = atob(result.data2);
+	        			var audioTypeB = result.format2;	
+	                    var byteNumbersB = new Array(byteCharactersB.length);
+	                    for (var j = 0; j < byteCharactersB.length; j++) {
+	                            byteNumbersB[j] = byteCharactersB.charCodeAt(j);
+	                    }
+	                    var byteArrayB = new Uint8Array(byteNumbersB);
+	                    audio2.type = audioType;
+	                    var back = new Blob([byteArrayB],{type:audioType});
+	                	audio2.src = 	window.URL.createObjectURL(back);
+
+                	}
+                   
+                    // var mediaController = new MediaController();
+                    // audio1.controller = mediaController;
+
+                    if(audio2 !==null){
+                    	//audio2.controller = mediaController;
+                    	audio2.play();
+                    }
+                    audio1.play();
+	                //mediaController.play();
+	                $(audio1).bind("ended",function(){
 	                	isPlaying=false;
 	                });
 	                isPlaying=true;
@@ -409,6 +437,10 @@ pageEncoding="US-ASCII"%>
 					    	resultBlob = null;
 					    	backgroundKey=null;
 					    	$("#postRecord").prop('disabled', true);
+					    	 var oldPostC = $("#postCountNumber").html();
+			                    oldPostC = parseInt(oldPostC);
+			                    oldPostC += 1;
+			                    $("#postCountNumber").html(oldPostC);
 			        	},
 			        	error: function (xhr, ajaxOptions, thrownError) {
 			                if (xhr.readyState == 0 || xhr.status == 0) {
@@ -416,6 +448,10 @@ pageEncoding="US-ASCII"%>
 			                    $("#postRecord").prop('disabled', true);
 			                    resultBlob = null;
 			                    backgroundKey=null;
+			                    var oldPostC = $("#postCountNumber").html();
+			                    oldPostC = parseInt(oldPostC);
+			                    oldPostC += 1;
+			                    $("#postCountNumber").html(oldPostC);
 			                    return;
 			                } else {
 			                	alert("XHR Status = "+xhr.status);
@@ -462,17 +498,21 @@ $("#searchUserForm").submit(function(e){
 	function onMessage(data){
 		var jsonData = JSON.parse(data.data);
 
-		if(jsonData.comment === null){
-			com = "no comment";
-		}
-		else{
-			com = jsonData.comment;
-		}
+		
+		com = jsonData.comment;
+		
 		var newPostDiv="<div class='voiceTile tile ol-transparent "+tileClasses[Math.floor(Math.random() * 7)]
 			+"'><div class='tile-content' style='color:white;'>"
-			+jsonData.creater+"<br/>"+com
-			+"<button onclick=clickToPlay('"+jsonData.postKey+"')>Play</button><br/><br/><button onclick=clickToMix('"+jsonData.postKey+"')>Mix</button></div></div>";
+			+jsonData.creater+"<br/>"+com+"<br/>";
 
+		var newPostDiv2;
+		if(com === 'Original'){
+			newPostDiv2="<button onclick=clickToPlay('"+jsonData.postKey+"') style='margin-bottom:5px;margin-top:5px;'>Play</button><br/><button onclick=clickToMix('"+jsonData.postKey+"')>Mix</button></div></div>";
+		}
+		else{
+			newPostDiv2="<button onclick=clickToPlay('"+jsonData.postKey+"')>Play</button><br/><br/></div></div>";
+		}
+		newPostDiv += newPostDiv2;
 		var currHtml = $("#postContainer").html();
 		currHtml = newPostDiv+currHtml;
         $("#postContainer").html(currHtml); 

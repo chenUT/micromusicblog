@@ -5,27 +5,51 @@ import com.googlecode.objectify.annotation.Id;
 
 public class PostDataReturn {
 	@JsonProperty
-	byte[][] data;
+	byte[] data1;
+
+	@JsonProperty
+	byte[] data2;
 	
 	@JsonProperty
-	String[] format;
+	String format1;
 
-	@JsonProperty("data")
-	public byte[][] getData() {
-		return data;
+	@JsonProperty
+	String format2;
+
+	@JsonProperty("data1")
+	public byte[] getData1() {
+		return data1;
 	}
 
-	public void setData(byte[][] data) {
-		this.data = data;
+	@JsonProperty("data2")
+	public byte[] getData2() {
+		return data2;
+	}
+
+	public void setData1(byte[] data) {
+		this.data1 = data;
+	}
+
+	public void setData2(byte[] data) {
+		this.data2 = data;
 	}
 	
-	@JsonProperty("format")
-	public String[] getFormat(){
-		return this.format;
+	@JsonProperty("format1")
+	public String getFormat1(){
+		return this.format1;
 	}
 	
-	public void setFormat(String[] format){
-		this.format = format;
+	public void setFormat1(String format){
+		this.format1 = format;
+	}
+
+		@JsonProperty("format2")
+	public String getFormat2(){
+		return this.format2;
+	}
+	
+	public void setFormat2(String format){
+		this.format2 = format;
 	}
 	
 }

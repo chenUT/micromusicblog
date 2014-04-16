@@ -47,15 +47,15 @@ pageEncoding="US-ASCII"%>
        type:"POST",
        url:"/api/userData/profile/"+userName,
        contentType: "application/json; charset=utf-8",
-       dataType:"json",
        success:function(data){
         window.location.href = "/profile";
       },
       error:function(jqXHR,textStatus,errorThrown){
-   		    			//alert("error "+jqXHR+" "+textStatus+" "+errorThrown);
-   		    			window.location.href = "/profile";
-   		    		}
-   		    	});
+	   			//alert("error "+jqXHR+" "+textStatus+" "+errorThrown);
+	   			//right now no need to send json profile, so server may thrown a error we just omit it.
+	   			window.location.href = "/profile";
+	   		}
+	   	});
    });
 
 

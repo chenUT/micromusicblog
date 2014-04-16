@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.ece1779.group4.mmb.model.UserDetail;
 import com.ece1779.group4.mmb.model.UserInfo;
@@ -75,28 +76,29 @@ public class UserInfoDataController {
 	//User info here only have a simple user profile name and its account Name
 	 @RequestMapping(value="/profile/{profileName}",method = RequestMethod.POST,
 	    		headers = {"Content-type=application/json"})
-	 public ResponseEntity<UserInfo> createUserProfile(@PathVariable String profileName){
+	 @ResponseStatus(value = HttpStatus.CREATED)
+	 public void createUserProfile(@PathVariable String profileName){
 		 	
 		 	//this depends on google account service
 		 	UserService userService = UserServiceFactory.getUserService();
-		 	
-		 	UserInfo existUser = ofy().load().type(UserInfo.class).filter("accountName ==",userService.getCurrentUser().getEmail()).first().now();
+		 	String accountName = userService.getCurrentUser().getEmail();
+		 	UserInfo existUser = ofy().load().key(Key.create(UserInfo.class,accountName)).now();
 		 	
 		 	if(existUser !=null){
 		 		existUser.setProfileName(profileName);
-		 		ofy().save().entity(existUser);
-		 		return new ResponseEntity<UserInfo>(existUser,HttpStatus.CREATED);
+		 		ofy().save().entity(existUser).now();
+		 		//return new ResponseEntity<UserInfo>(HttpStatus.CREATED);
 		 	}
 		 	else{
 		 		UserInfo userInfo = new UserInfo();
 		 		userInfo.setProfileName(profileName);
-		 		userInfo.setAccountName(userService.getCurrentUser().getEmail());
+		 		userInfo.setAccountName(accountName);
 		 		userInfo.setFollowerCount(0);
 		 		userInfo.setKey(Key.create(UserInfo.class,userService.getCurrentUser().getEmail()));
-		 		ofy().save().entity(userInfo);
+		 		ofy().save().entity(userInfo).now();
 		 		
 		 	}
-		 	return new ResponseEntity<UserInfo>(HttpStatus.CREATED);
+		 	//return new ResponseEntity<UserInfo>(HttpStatus.CREATED);
 		 	//put userinfo in memcache
 //		 	MemcacheService syncCache;
 //		 	try{
@@ -115,8 +117,8 @@ public class UserInfoDataController {
 		 	//this depends on google account service
 		 	UserService userService = UserServiceFactory.getUserService();
 		 	String myAccount = userService.getCurrentUser().getEmail();
-		 	UserInfo target = ofy().load().type(UserInfo.class).filter("accountName ==",accountName).first().now();
-		 	UserInfo myInfo = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
+		 	UserInfo target = ofy().load().key(Key.create(UserInfo.class,accountName)).now();
+		 	UserInfo myInfo = ofy().load().key(Key.create(UserInfo.class,myAccount)).now();
 		 	
 		 	if(target == null){
 		 		return new ResponseEntity<UserInfo>(HttpStatus.BAD_REQUEST);
@@ -134,8 +136,8 @@ public class UserInfoDataController {
 		 	System.out.println("i am following :"+myInfo.getFollowings().size()+" people now");
 		 	ofy().save().entity(myInfo).now();
 		 	
-		 	UserInfo myInfoText = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
-			System.out.println("i am following :"+myInfoText.getFollowings().size()+" people now (retrive data from datastore)");
+		 	//UserInfo myInfoText = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
+			//System.out.println("i am following :"+myInfoText.getFollowings().size()+" people now (retrive data from datastore)");
 		 	//put userinfo in memcache
 //		 	MemcacheService syncCache;
 //		 	try{
@@ -153,9 +155,8 @@ public class UserInfoDataController {
 		 	//this depends on google account service
 		 	UserService userService = UserServiceFactory.getUserService();
 		 	String myAccount = userService.getCurrentUser().getEmail();
-		 	UserInfo target = ofy().load().type(UserInfo.class).filter("accountName ==",accountName).first().now();
-		 	
-		 	UserInfo myInfo = ofy().load().type(UserInfo.class).filter("accountName ==",myAccount).first().now();
+		 	UserInfo target = ofy().load().key(Key.create(UserInfo.class,accountName)).now();
+		 	UserInfo myInfo = ofy().load().key(Key.create(UserInfo.class,myAccount)).now();
 		 	
 		 	
 		 	if(target == null){
