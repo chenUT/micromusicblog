@@ -15,14 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.ece1779.group4.mmb.model.Greeting;
-import com.ece1779.group4.mmb.model.Post;
 import com.ece1779.group4.mmb.model.PostInfo;
+import com.ece1779.group4.mmb.model.PostMeta;
 import com.ece1779.group4.mmb.model.UserInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.users.UserService;
@@ -42,8 +37,8 @@ public class ProfileController {
 		 UserInfo user = ofy().load().type(UserInfo.class).filter("accountName ==",userService.getCurrentUser().getEmail()).first().now();
 	     
          if(user == null){
-	     System.out.println("userinfo null");
-        	 ModelAndView regModel = new ModelAndView("register");
+        	System.out.println("userinfo null");
+        	ModelAndView regModel = new ModelAndView("register");
        	 	return regModel;
          }
 
@@ -58,21 +53,21 @@ public class ProfileController {
 		 model.addAttribute("logouturl",userService.createLogoutURL("/login")); 
 	
 		 List<PostInfo> postInfoList = new ArrayList<PostInfo>();
-		 int bufferIndex=0;
 		 PostInfo tempPostInfo;
+		 Map<Key<PostMeta>,PostMeta> myPostMap =ofy().load().keys(user.getPosts());
+		 Set<Key<PostMeta>>keys = myPostMap.keySet();
+		 Iterator<Key<PostMeta>> iter = keys.iterator();
 		 
-		 
-		 Map<Key<Post>,Post> myPostMap =ofy().load().keys(user.getPosts());
-//		 List<Post> postsFromMe = new ArrayList<Post>(myPostMap.values());
-		 Set<Key<Post>>keys = myPostMap.keySet();
-		 Iterator<Key<Post>> iter = keys.iterator();
 		 System.out.println("postsFromMe: "+myPostMap.size());
+		 model.addAttribute("postCount",myPostMap.size());
+		 
 //		 for(int i=0; i<postsFromMe.size();i++){
-		 Key<Post> tempKey=null;
-		 Post currPost;
-		 while(iter.hasNext())
+		 Key<PostMeta> tempKey=null;
+		 PostMeta currPost;
+		 while(iter.hasNext()){
 			 tempKey = iter.next(); 
 		 	 currPost = myPostMap.get(tempKey);
+//		 	 System.out.println("postsFromMe: "+currPost.getFormat());
 //			 Post currPost = postsFromMe.get(i);
 			 tempPostInfo = new PostInfo();
 			 if(currPost !=null){
@@ -87,7 +82,7 @@ public class ProfileController {
 				 tempPostInfo.setCreateTime(currPost.getCreatedTime());
 				 postInfoList.add(tempPostInfo);
 			 }
-//		 }
+		 }
 		 ModelAndView profModel = new ModelAndView("profile");
 
 		 
@@ -95,9 +90,12 @@ public class ProfileController {
 		 
 		 //create a buffer for 200 simple posts
 //		 PostInfo[] postInfoBuffer = new PostInfo[200]; 
-		 PostInfo[] postInfoBuffer = new PostInfo[20]; 
 		
 		 System.out.println("i am following: "+user.getFollowings().size());
+		 model.addAttribute("followingCount",user.getFollowings().size());
+		 model.addAttribute("followerCount",user.getFollowers().size());
+		 
+		 
 		 if(user.getFollowings().size() !=0){
 			 String keyString = user.getFollowings().get(0).getString();
 			 System.out.println("i am following: "+keyString);
@@ -120,27 +118,22 @@ public class ProfileController {
 				 //TODO find the latest 200 post and return 20 of them
 				 //we store the rest in memcache for later request
 				 //TODO a more efficient searching algorithm is preferred
-//				 long earliesPostTime=Long.MAX_VALUE; //timestamp for earliest post
-//				 Post earliestPost;
-//				 int earliestPostIndex=0;
 				 Iterator<Key<UserInfo>> infoKeyIter = followingUserInfoKeys.iterator();
-//				 for(UserInfo info : infos){
 				 UserInfo info;
 				 Key<UserInfo> currKey;
 				 while(infoKeyIter.hasNext()){
 					 currKey = infoKeyIter.next();
 					 info = followingMap.get(currKey);
-					 List<Post> postsForUser = new ArrayList<Post>();
-					 for(Key<Post> pk : info.getPosts()){
+					 List<PostMeta> postsForUser = new ArrayList<PostMeta>();
+					 //first all posts are loaded
+					 for(Key<PostMeta> pk : info.getPosts()){
 						 System.out.println("following post with key "+pk.getString());
-						 Post p = ofy().load().key(pk).now();
+						 PostMeta p = ofy().load().key(pk).now();
 						 if(p!=null){
 							 postsForUser.add(p);
 						 }
 					 }
-					 
 					 //sync load					
-					
 					 for(int i=0; i<postsForUser.size();i++){
 						 currPost = postsForUser.get(i);
 						 tempPostInfo = new PostInfo();
@@ -157,58 +150,12 @@ public class ProfileController {
 							 postInfoList.add(tempPostInfo);
 						 }
 						 //compare each post with earlies post time
-//						 if(currPost.getCreatedTime()<earliesPostTime){
-//							 earliestPost = postsForUser.get(i);
-//							 earliesPostTime = earliestPost.getCreatedTime();
-//							 if(bufferIndex < postInfoBuffer.length){
-//								tempPostInfo = new PostInfo();
-//								if(currPost.getComment() == null){
-//                                    tempPostInfo.setComment("No Comment");
-//								}
-//								else{
-//									tempPostInfo.setComment(currPost.getComment());
-//								}
-//								tempPostInfo.setCreater(info.getProfileName());
-//								tempPostInfo.setPostKey(currPost.getKey().toString());
-//								tempPostInfo.setCreateTime(currPost.getCreatedTime());
-//								postInfoBuffer[bufferIndex] = tempPostInfo;
-//								earliestPostIndex =bufferIndex; 
-//								bufferIndex++;
-//							 }
-//						 }
-//						 else{//curr is later post, remove older post then find the oldest post againg
-//							 tempPostInfo = new PostInfo();
-//								if(currPost.getComment() == null){
-//                                 tempPostInfo.setComment("No Comment");
-//								}
-//								else{
-//									tempPostInfo.setComment(currPost.getComment());
-//								}
-//								tempPostInfo.setCreater(info.getProfileName());
-//								tempPostInfo.setPostKey(currPost.getKey().toString());
-//								tempPostInfo.setCreateTime(currPost.getCreatedTime());
-//							 if(bufferIndex < postInfoBuffer.length){
-//								postInfoBuffer[bufferIndex] = tempPostInfo;
-//								bufferIndex++;
-//							 }
-//							 else{
-//								 postInfoBuffer[earliestPostIndex] = tempPostInfo;
-//								 earliestPostIndex = searchEarliestIndex(postInfoBuffer);
-//								 earliesPostTime = postInfoBuffer[earliestPostIndex].getCreateTime();
-//							 }
-//						 }
 					 }
 				 }
-				 
-				 
 			 }
 		 }
-		 
+		 System.out.println("total posts in list: "+postInfoList.size());
 		 profModel.addObject("postInfos",postInfoList);
-//		 List<String> t = getList();
-		 //profModel.addObject(attributeName, attributeValue)
-         
-		 //check whether user is a registered user
        	 return profModel;
 	}
 	
@@ -222,64 +169,9 @@ public class ProfileController {
 		}
 	}
 	
-	private int searchEarliestIndex(PostInfo[] posts){
-		int index=0;
-		long earliestTime = Long.MAX_VALUE;
-		
-		//use quick search instead
-		for(int i=0;i<posts.length ;i++){
-			if(posts[i].getCreateTime() < earliestTime){
-				index = i;
-				earliestTime = posts[i].getCreateTime();
-			}
-		}
-		
-		return index;
-	}
-	
-	
-	private List<String> getList() {
-		 
-		List<String> list = new ArrayList<String>();
-		list.add("List A");
-		list.add("List B");
-		list.add("List C");
-		list.add("List D");
-		list.add("List 1");
-		list.add("List 2");
-		list.add("List 3");
- 
-		return list;
- 
-	}
-	
-	@RequestMapping(method = RequestMethod.POST,
-    		headers = {"Content-type=application/json"})
-	public void postInfo(){
-		Greeting g = new Greeting();
-		g.setContent("test");
-		g.setId(123l);
-		
-		UserService userService = UserServiceFactory.getUserService(); 
-		String accountName = userService.getCurrentUser().getEmail();
-		ChannelService channelService = ChannelServiceFactory.getChannelService();
-		String channelKey = accountName;
-	
-		
-		
-		ObjectWriter mapper = new ObjectMapper().writer();
-		String json="{}";
-		try {
-			json = mapper.writeValueAsString(g);
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		  
-		channelService.sendMessage(new ChannelMessage(channelKey,json));
-		
-		//return new ResponseEntity<Greeting>(g,HttpStatus.OK);
-	}
-	
+
+//	@RequestMapping(method = RequestMethod.POST,
+//    		headers = {"Content-type=application/json"})
+//	public void postInfo(){
+//	}
 }

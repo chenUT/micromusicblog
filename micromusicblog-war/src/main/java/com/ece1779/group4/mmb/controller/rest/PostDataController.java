@@ -4,6 +4,8 @@ import static com.ece1779.group4.mmb.dao.OfyService.ofy;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -18,14 +20,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.ece1779.group4.mmb.model.Post;
 import com.ece1779.group4.mmb.model.PostData;
+import com.ece1779.group4.mmb.model.PostDataReturn;
 import com.ece1779.group4.mmb.model.PostInfo;
+import com.ece1779.group4.mmb.model.PostMeta;
 import com.ece1779.group4.mmb.model.UserInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +35,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
-import com.google.appengine.api.datastore.Blob;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.googlecode.objectify.Key;
@@ -43,27 +44,43 @@ import com.googlecode.objectify.Key;
 public class PostDataController {
 	@RequestMapping(value="/{postKeyString}",method=RequestMethod.GET)
 	@ResponseBody
-	public ResponseEntity<PostData> getPost(@PathVariable String postKeyString){
+	public ResponseEntity<PostDataReturn> getPost(@PathVariable String postKeyString){
 		
 		//TODO we need refactor this so it returns a url rather than post binary data
-	   Post post;
+	   PostMeta post;
 	   
-	   Key<Post> tempKey = Key.create(postKeyString);
+	   Key<PostMeta> tempKey = Key.create(postKeyString);
 	   
 	   post = ofy().load().key(tempKey).now();
 	  
 	   if(post == null){
-		   return new ResponseEntity<PostData>(HttpStatus.NOT_FOUND);
+		   return new ResponseEntity<PostDataReturn>(HttpStatus.NOT_FOUND);
 	   }
 		   
-		PostData postData = new PostData();
-		postData.setData(post.getData());
-		postData.setFormat(post.getFormat());
-	
-		//clear memory
-		post = null;
-		
-		return new ResponseEntity<PostData>(postData, HttpStatus.OK);
+	   PostDataReturn returnData = new PostDataReturn();
+	   //reconstruct 
+	   byte[] originalData = null;
+	   
+	   int chunkCount = post.getDataMap().size();
+	   Key<PostData> postDataKey;
+	   PostData tempData;
+	   for(int i =0;i<chunkCount ; i++){
+		   postDataKey = post.getPostDataKey(i);
+		   tempData = ofy().load().key(postDataKey).now();
+		   if(i == 0){
+			  originalData = tempData.getData(); 
+		   }
+		   else{
+			   originalData = concat(originalData, tempData.getData());
+		   }
+	   }
+	   System.out.println("data size"+ originalData.length);
+	   returnData.setData(originalData);
+	   returnData.setFormat(post.getFormat());
+	   //clear memory
+	   post = null;
+
+	   return new ResponseEntity<PostDataReturn>(returnData, HttpStatus.OK);
 	}
 	
 //	@RequestMapping(value="/user",method=RequestMethod.GET)
@@ -109,10 +126,52 @@ public class PostDataController {
 			        		 theFile.write(buffer, 0, len);  
 			        	 }
 			        	 //store data in entity
-			        	 Post post = new Post();
-			        	 post.setData(theFile.toByteArray());
+			        	 PostMeta postMeta = new PostMeta();
+			        	 //we split the data into chunks of 768kb of data
+
+			        	 List<PostData> dataChunkList = new ArrayList<PostData>();
+			        	 int chunkSize= 1024*768;
+			        	 byte[] postDataTotal = theFile.toByteArray();
 			        	 theFile.close();
-			        	 System.out.println("blob size: "+post.getData().length);
+			        	 System.out.println("blob size: "+postDataTotal.length);
+			        	 PostData dataChunk;
+			        	 int dataLength = postDataTotal.length;
+			        	 double chunkRatio = (double)postDataTotal.length/chunkSize; 
+			        	 int chunkCount;
+			        	 if(chunkRatio%1 != 0){
+			        		 chunkCount = (int)chunkRatio+1;
+			        	 }
+			        	 else{
+			        		 //this is rare case
+			        		 chunkCount = (int)chunkRatio;
+			        	 }
+
+			        	 int begin;
+			        	 int end;
+//			        	 byte[] dataChunkByteArray;
+			        	 for(int i=0; i<chunkCount; i++){
+			        		 begin = i*chunkSize;
+			        		 end= (i+1)*chunkSize;
+			        		 dataChunk = new PostData();
+//			        		 if(i != chunkCount -1){
+//			        			 dataChunkByteArray = new byte[chunkSize];
+//			        		 }
+			        		 if(i == chunkCount -1 ){//last chunk may have a different size
+			        			 int leftOverSize = dataLength - chunkSize*i;
+			        			 end = begin + leftOverSize; //change end to new position
+			        		 }
+			        		 //copy data to chunk
+			        		 dataChunk.setData(Arrays.copyOfRange(postDataTotal, begin, end));
+			        		 dataChunk.setPostId(System.currentTimeMillis()+(long)i+(long)(Math.random()*100.0));
+			        		 dataChunkList.add(dataChunk);
+
+			        		 //set the datachunk index and key to postMeta
+			        		 postMeta.addPostData(dataChunk.getKey(),i);
+			        	 }
+			        	 
+			        	 ofy().save().entities(dataChunkList).now();
+			        	 
+			        	 postMeta.setFormat(audioFormat);
 //			        	 Blob b =new Blob(theFile.toByteArray());
 			        	 //blob retrieved
 			        	 //get current user infomation
@@ -121,44 +180,47 @@ public class PostDataController {
                          
 			        	 long createdTime = System.currentTimeMillis();
 			        	 
-			        	 post.setId(userAccount+"_"+createdTime); //we use current time stamp as the post id
-			        	 post.setCreatedTime(createdTime);
+			        	 postMeta.setId(userAccount+"_"+createdTime); //we use current time stamp as the post id
+			        	 postMeta.setCreatedTime(createdTime);
 			        	 
 			        	 //store post in datastore
-			        	 
-			        	 
-			        	 
+
 			        	 //find current user and add it to its post list
 			        	 //this depends on google account service
 			        	 UserInfo poster =  ofy().load().type(UserInfo.class).filter("accountName ==",userAccount).first().now();
 			        	 //					  add post to poster
-			        	 post.setOwnerKey(poster.getKey());
-			        	 poster.addPost(post.getKey());
+			        	 poster.addPost(postMeta.getKey());
                          System.out.println("post added to poster");
                          System.out.println("post added for "+poster.getAccountName());
-                         System.out.println("post added with id "+post.getKey().getString());
+                         System.out.println("post added with id "+postMeta.getKey().getString());
 			        	 
 			        	 ofy().save().entity(poster).now();
-			        	 ofy().save().entity(post).now();
+			        	 ofy().save().entity(postMeta).now();
 			        	 
 			        	 //create return postInfo to client
 			        	 PostInfo newPostInfo = new PostInfo();
 			        	 newPostInfo.setCreater(poster.getProfileName()); 
-			        	 newPostInfo.setPostKey(post.getKey().getString());
-			        	 newPostInfo.setCreateTime(post.getCreatedTime());
+			        	 newPostInfo.setPostKey(postMeta.getKey().getString());
+			        	 newPostInfo.setCreateTime(postMeta.getCreatedTime());
 			        	 newPostInfo.setOwnerKey(poster.getKey().getString());
+			        	 newPostInfo.setComment(postMeta.getComment());
 
 			        	 //notify all followers
                          System.out.println("creating channel to followers");
 			        	 ChannelService channelService = ChannelServiceFactory.getChannelService();
+			        	 String channelKey="";
+			        	 //post to the post user first
+			        	
+			        	 
 			        	 List<Key<UserInfo>> followers = poster.getFollowers();
 			        	 System.out.println("total followers count: "+followers.size());
-			        	 String channelKey="";
 			        	 //create new post to json
 			        	 ObjectWriter mapper = new ObjectMapper().writer();
 			        	 String json="{}";
 			        	 try {
 			        		 json = mapper.writeValueAsString(newPostInfo);
+			        		 channelKey = poster.getKey().getString();
+			        		 channelService.sendMessage(new ChannelMessage(channelKey,json));//post back first
 			        		 for(int i=0;i<followers.size();i++){
 			        			 System.out.println("sending notification");
 			        			 channelKey = followers.get(i).getString();
@@ -180,40 +242,24 @@ public class PostDataController {
 			 	
 		}
 		 
-		 @RequestMapping(value="/{postId}", method = RequestMethod.PUT,
-				 headers = {"Content-type=application/json"})
-		 public  ResponseEntity<Post> updatePost(@PathVariable String postId, @RequestBody Post post){
-			 ofy().save().entity(post);
-//			 Post newInfo = ofy().load().type(Post.class).id(accountName).now();
-			return new ResponseEntity<Post>(HttpStatus.NO_CONTENT); 
-		 }
-		 
 		//User info here only have a simple user profile name and its account Name
 		 @RequestMapping(value="/{postId}", method = RequestMethod.DELETE)
-		 public  ResponseEntity<Post> createPost(@PathVariable String postId){
-			 //first remove from memcache
-			// MemcacheService syncCache=null;
-//			 boolean deleted = ;
-//			 try {
-//				  syncCache = MemcacheServiceFactory.getMemcacheService();
-//				  if(syncCache.contains(accountName)){
-//					deleted = syncCache.delete(accountName);
-//					if(deleted){
-						ofy().delete().type(Post.class).id(postId).now();
-//					}
-				//  }
-//			   } catch (MemcacheServiceException e) {
-//		           // If there is a problem with the cache,
-//		           // fall through to the datastore.
-//			   }
-//			 
-//			 if(deleted){
-				 return new ResponseEntity<Post>(HttpStatus.NO_CONTENT);
-//			 }
-//			 else{
-//				 return new ResponseEntity<Post>(HttpStatus.NOT_FOUND);
-//			 }
-			 
+		 public  ResponseEntity<PostMeta> createPost(@PathVariable String postId){
+
+			 ofy().delete().type(PostMeta.class).id(postId).now();
+			 //TODO delete all post data as well
+			 return new ResponseEntity<PostMeta>(HttpStatus.NO_CONTENT);
 		} 
+	/**
+	 *  
+	 * @param first
+	 * @param second
+	 * @return concated array from first and second
+	 */
+	 public static byte[] concat(byte[] first, byte[] second) {
+		 byte[] result = Arrays.copyOf(first, first.length + second.length);
+		 System.arraycopy(second, 0, result, first.length, second.length);
+		 return result;
+	 }
 	
 }

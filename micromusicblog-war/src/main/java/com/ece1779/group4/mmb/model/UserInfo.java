@@ -49,7 +49,7 @@ public class UserInfo {
 	List<Key<UserInfo>> followings = new ArrayList<Key<UserInfo>>();
 	
 	@JsonProperty
-	List<Key<Post>> posts = new ArrayList<Key<Post>>();
+	List<Key<PostMeta>> posts = new ArrayList<Key<PostMeta>>();
 
 	@JsonProperty
 	List<Key<UserInfo>> followers = new ArrayList<Key<UserInfo>>();
@@ -85,11 +85,11 @@ public class UserInfo {
 	}
 
 	@JsonProperty("posts")
-	public List<Key<Post>> getPosts() {
+	public List<Key<PostMeta>> getPosts() {
 		return posts;
 	}
 
-	public void setPosts(List<Key<Post>> posts) {
+	public void setPosts(List<Key<PostMeta>> posts) {
 		this.posts = posts;
 	}
 	
@@ -131,11 +131,11 @@ public class UserInfo {
 		this.followers.remove(follower);
 	}
 
-	public void addPost(Key<Post> p){
+	public void addPost(Key<PostMeta> p){
 		this.posts.add(p);
 	}
 	
-	public void removePost(Key<Post> p ){
+	public void removePost(Key<PostMeta> p ){
 		this.posts.remove(p);
 	}
 	

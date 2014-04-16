@@ -1,6 +1,8 @@
 package com.ece1779.group4.mmb.model;
 
 import java.beans.Transient;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,18 +15,15 @@ import com.googlecode.objectify.annotation.Id;
 @JsonIgnoreProperties(ignoreUnknown=true)
 @Entity
 @Cache
-public class Post {
+public class PostMeta {
 	@Id
 	String id; //Id is in the format of userAccount_timestamp so it would be unique and easier for query to compare
 
 	@JsonProperty
 	String comment;
 	
-//	@JsonProperty
-//	byte[] backgroundImg;
-	
 	@JsonProperty
-	Key<Post> key;
+	Key<PostMeta> key;
 	
 	@JsonProperty
 	Blob data;
@@ -36,10 +35,25 @@ public class Post {
 	long createdTime;
 	
 	@JsonProperty
-	Key<UserInfo> ownerKey;
-	
-	@JsonProperty
 	String format;
+	
+	 List<Key<PostData>> dataList = new ArrayList<Key<PostData>>();
+	
+	public List<Key<PostData>> getDataMap() {
+		return dataList;
+	}
+
+	public void setDataMap(List<Key<PostData>> dataMap) {
+		this.dataList = dataMap;
+	}
+
+	public void addPostData(Key<PostData> data, int index){
+		dataList.add(index,data);
+	}
+	
+	public Key<PostData> getPostDataKey(int index){
+		return dataList.get(index);
+	}
 	
 	@JsonProperty("format")
 	public String getFormat() {
@@ -55,6 +69,11 @@ public class Post {
 		return hit;
 	}
 
+	//for thread safety
+	public synchronized void addHit(){
+			hit++;
+	}
+	
 	public void setHit(int hit) {
 		this.hit = hit;
 	}
@@ -86,15 +105,6 @@ public class Post {
 		this.comment = comment;
 	}
 
-//	@JsonProperty("background")
-//	public byte[] getBackground() {
-//		return backgroundImg;
-//	}
-//
-//	public void setBackground(byte[] backgroundImg) {
-//		this.backgroundImg = backgroundImg;
-//	}
-
 	@JsonProperty("data")
 	public byte[] getData() {
 		if(data!=null){
@@ -110,17 +120,8 @@ public class Post {
 		this.data = new Blob(voiceData);
 	}
 	
-	@JsonProperty("ownerKey")
-	public Key<UserInfo> getOwnerKey(){
-		return this.ownerKey;
-	}
-	
-	public void setOwnerKey(Key<UserInfo> ownerKey){
-		this.ownerKey = ownerKey;
-	}
-	
 	@Transient
-	public Key<Post> getKey(){
-		return Key.create(Post.class, id);
+	public Key<PostMeta> getKey(){
+		return Key.create(PostMeta.class, id);
 	}
 }
